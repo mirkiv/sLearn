@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{{ group.name }} — {% t 'add_note_btn' %} - SLearn{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+        <a href="{% url 'groups:detail' group.pk %}" style="color: var(--secondary-color); text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </a>
+        <div>
+            <h1 style="margin: 0; font-size: 1.8rem;">{% t 'add_note_btn' %}</h1>
+            <p style="margin: 4px 0 0; color: var(--secondary-color); font-size: 0.95rem;">{{ group.name }}</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem 2rem;">
+        <p style="color: var(--secondary-color); margin-top: 0;">{% t 'add_note_to_group_desc' %}</p>
+
+        {% if my_notes %}
+        <form method="post" action="{% url 'groups:add_note' group.pk %}">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;">
+                {% for note in my_notes %}
+                <label style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border: 2px solid var(--glass-border); border-radius: 14px; cursor: pointer; transition: border-color 0.2s, background 0.2s;" class="note-pick-card">
+                    <input type="radio" name="post_id" value="{{ note.pk }}" style="width: 18px; height: 18px; accent-color: var(--primary-color); flex-shrink: 0;" required>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ note.title|default:"—" }}</div>
+                        <div style="font-size: 0.8rem; color: var(--secondary-color);">{{ note.created_at|date:"d.m.Y" }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button type="submit" class="btn" style="flex: 1; min-width: 140px; padding: 12px;">{% t 'add_note_btn' %}</button>
+                <a href="{% url 'groups:detail' group.pk %}" class="btn btn-outline" style="flex: 1; min-width: 140px; padding: 12px; text-align: center;">{% t 'cancel' %}</a>
+            </div>
+        </form>
+        {% else %}
+        <div style="text-align: center; padding: 2rem 0; color: var(--secondary-color);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem; opacity: 0.4;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <p style="font-size: 1rem;">{% t 'no_notes_for_group' %}</p>
+            <a href="{% url 'posts:create' %}" class="btn" style="display: inline-block; margin-top: 0.5rem;">{% t 'write_new_post' %}</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.note-pick-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(29, 209, 161, 0.04);
+}
+.note-pick-card:has(input:checked) {
+    border-color: var(--primary-color);
+    background: rgba(29, 209, 161, 0.08);
+}
+</style>
+{% endblock %}

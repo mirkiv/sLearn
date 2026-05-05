@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load markdown_extras custom_dict %}
+{% block title %}SLearn - Home{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="font-size: 3rem; color: var(--primary-color); margin-bottom: 0.5rem;">{% t 'home_welcome' %}</h1>
+    <p style="font-size: 1.2rem; color: var(--secondary-color);">{% t 'home_subtitle' %}</p>
+</div>
+
+<div class="feed-container" style="max-width: 720px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0;">{% t 'trending_feed' %}</h2>
+        {% if user.is_authenticated %}<a href="{% url 'posts:create' %}" class="btn" style="padding: 0.6rem 1.2rem; font-size: 0.95rem;">{% t 'write_post_btn' %}</a>{% endif %}
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+        {% for post in recent_posts %}
+            {% include 'includes/post_card.html' with post=post compact=False %}
+        {% empty %}
+        <div class="post-card" style="text-align: center; padding: 3rem 2rem; color: var(--secondary-color);">
+            <p style="font-size: 1.1rem; margin: 0;">{% t 'empty_feed' %}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

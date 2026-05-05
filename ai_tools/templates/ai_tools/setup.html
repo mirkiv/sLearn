@@ -1,0 +1,83 @@
+{% extends 'ai_tools/base_ai.html' %}
+{% load custom_dict %}
+
+{% block ai_content %}
+<div class="card" style="max-width: 900px; margin: 0 auto; text-align: center; padding: 4rem 3rem;">
+    <div style="margin-bottom: 2.5rem;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; background: var(--glass-bg); border-radius: 20px; border: 1px solid var(--glass-border); color: var(--primary-color);">
+            {{ provider_info.logo|safe }}
+        </div>
+        <h2>{% t 'ai_setup_title' name=provider_info.name %}</h2>
+        <p style="color: var(--secondary-color); font-size: 1.1rem; margin-top: 0.5rem;">{% t 'ai_setup_subtitle' %}</p>
+    </div>
+
+    <div style="text-align: left; background: var(--glass-bg); padding: 2rem; border-radius: 16px; margin-bottom: 2.5rem; border: 1px solid var(--glass-border); box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--primary-color);">{% t 'ai_instructions_title' %}</h3>
+        <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-color); font-size: 1rem; line-height: 1.8;">
+            <li>{% t 'ai_setup_step1' name=provider_info.name %} <a href="{{ provider_info.url }}" target="_blank" style="color: var(--primary-color); font-weight: 600; text-decoration: underline;">{% t 'official_page' lang=request.session.lang|default:'ru' %}</a></li>
+            <li>{% t 'ai_setup_step2' %}</li>
+            <li>{% t 'ai_setup_step3' %}</li>
+            <li>{% t 'ai_setup_step4' %}</li>
+        </ol>
+    </div>
+
+    <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+        <label style="font-weight: 600; margin-bottom: 0.8rem; display: block; font-size: 0.95rem; color: var(--secondary-color);">{% t 'ai_setup_label' %}</label>
+        <div style="display: flex; gap: 12px;">
+            <input type="password" id="apiKeyInput" class="form-control" placeholder="{% t 'ai_setup_placeholder' %}" style="flex: 1; padding: 14px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-color); transition: border-color 0.3s;">
+            <button id="validateBtn" class="btn" style="padding: 14px 32px; border-radius: 12px; font-weight: 600;">{% t 'ai_setup_btn' %}</button>
+        </div>
+        <p id="errorMsg" style="color: var(--error-color); margin-top: 1rem; font-size: 0.9rem; display: none; padding: 0.8rem; background: rgba(255, 71, 87, 0.1); border-radius: 8px;"></p>
+    </div>
+</div>
+{% csrf_token %}
+
+<script>
+    document.getElementById('validateBtn').addEventListener('click', function() {
+        const key = document.getElementById('apiKeyInput').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+        const btn = this;
+        
+        if (!key) {
+            errorMsg.textContent = 'Пожалуйста, введите API ключ.';
+            errorMsg.style.display = 'block';
+            return;
+        }
+        
+        errorMsg.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Проверка...';
+        
+        fetch("{% url 'ai_tools:validate_api_key' provider %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ api_key: key })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if(typeof showToast === 'function') {
+                    showToast(data.message);
+                } else {
+                    alert(data.message);
+                }
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                errorMsg.textContent = data.message;
+                errorMsg.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Подключить';
+            }
+        })
+        .catch(err => {
+            errorMsg.textContent = 'Ошибка соединения с сервером.';
+            errorMsg.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Подключить';
+        });
+    });
+</script>
+{% endblock %}

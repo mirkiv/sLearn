@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{{ group.name }} - SLearn{% endblock %}
+{% block content %}
+<style>
+    .gchat-box {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 420px
+    }
+
+    .gchat-msgs {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px
+    }
+
+    .gchat-msg {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start
+    }
+
+    .gchat-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: .8rem;
+        flex-shrink: 0;
+        overflow: hidden
+    }
+
+    .gchat-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%
+    }
+
+    .gchat-bubble {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 8px 14px;
+        max-width: 75%
+    }
+
+    .gchat-name {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 2px
+    }
+
+    .gchat-text {
+        font-size: .92rem;
+        line-height: 1.45;
+        white-space: pre-wrap
+    }
+
+    .gchat-time {
+        font-size: .7rem;
+        color: var(--secondary-color);
+        margin-top: 3px;
+        text-align: right
+    }
+
+    .gchat-form {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--glass-border);
+        background: var(--glass-bg)
+    }
+
+    .gchat-input {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1.5px solid var(--glass-border);
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: .92rem;
+        outline: none;
+        font-family: inherit
+    }
+
+    .gchat-input:focus {
+        border-color: var(--primary-color)
+    }
+
+    .gchat-send {
+        background: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s
+    }
+
+    .gchat-send:hover {
+        opacity: .85
+    }
+
+    .review-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: .8rem
+    }
+
+    .jr-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: .8rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .5rem
+    }
+
+    @media (max-width: 768px) {
+        .group-detail-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .jr-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap:wrap;">
+    <div style="flex: 1; min-width:300px;">
+        <h2 style="color: var(--primary-color); margin-top: 0; font-size: 2.2rem;">{{ group.name }}</h2>
+        <p style="font-size: 1.05rem; line-height: 1.6; color:var(--secondary-color);">{{ group.description }}</p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem;">
+            <span
+                style="display:inline-flex;align-items:center;padding:5px 14px;border-radius:10px;background:rgba(29,209,161,0.12);color:var(--primary-color);font-weight:600;font-size:.82rem;line-height:1.2;white-space:nowrap;">
+                {% if group.group_type == 'moderated' %}{% t 'group_type_moderated' %}{% else %}{% t 'group_type_open' %}{% endif %}
+            </span>
+            <span
+                style="display:inline-flex;align-items:center;padding:5px 14px;border-radius:10px;font-weight:600;font-size:.82rem;line-height:1.2;white-space:nowrap;background:{% if group.access_type == 'private' %}rgba(255,71,87,0.12);color:#ff4757{% else %}rgba(29,209,161,0.12);color:var(--primary-color){% endif %};">
+                {% if group.access_type == 'private' %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> {% t 'access_private' %}{% else %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> {% t 'access_public' %}{% endif %}
+            </span>
+        </div>
+    </div>
+    <div style="min-width: 200px; text-align: right; display:flex;flex-direction:column;gap:.5rem;">
+        {% if not membership %}
+        {% if pending_join %}
+        <button class="btn" style="background:var(--secondary-color);cursor:not-allowed;" disabled>{% t 'request_pending' %}</button>
+        {% else %}
+        <form method="post" action="{% url 'groups:join' group.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="font-size: 1rem; padding: 0.7rem 1.5rem; width: 100%;">
+                {% if group.access_type == 'private' %}{% t 'request_join' %}{% else %}{% t 'join_group' %}{% endif %}
+            </button>
+        </form>
+        {% endif %}
+        {% else %}
+        <div
+            style="background-color: var(--card-bg); padding: .8rem 1rem; border-radius: 10px; border: 1px solid var(--glass-border); text-align: center;">
+            <span style="font-size:.82rem;color:var(--secondary-color);font-weight:600;">{% t 'your_status' %}</span><br>
+            <span
+                style="display: inline-block; background-color: var(--primary-color); color: #000; padding: 0.3rem 0.9rem; border-radius: 20px; font-weight: bold; margin-top:4px; font-size:.88rem;">
+                {% if membership.role == 'teacher' %}{% t 'role_teacher' %}{% else %}{% t 'role_student' %}{% endif %}
+            </span>
+        </div>
+        {% if is_owner %}
+        <a href="{% url 'groups:settings' group.pk %}" class="btn btn-outline" style="width:100%;text-align:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            {% t 'group_settings_btn' %}</a>
+        {% endif %}
+        {% if not is_owner %}
+        <form method="post" action="{% url 'groups:leave' group.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline" style="width:100%;color:#ff4757;border-color:#ff4757;">{% t 'leave_group' %}</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--glass-border);">
+
+{% if is_owner and join_requests %}
+<div style="margin-bottom:2rem;">
+    <h3>{% t 'join_requests_title' %} ({{ join_requests|length }})</h3>
+    {% for jr in join_requests %}
+    <div class="jr-card">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div
+                style="width:36px;height:36px;border-radius:50%;background:var(--glass-border);display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;">
+                <img src="https://ui-avatars.com/api/?name={{ jr.user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;"></div>
+            <div>
+                <strong>@{{ jr.user.username }}</strong>
+                <div style="font-size:.8rem;color:var(--secondary-color);">{{ jr.created_at|date:"M j, Y H:i" }}</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:.5rem;">
+            <form method="post" action="{% url 'groups:handle_join_request' group.pk jr.pk 'accept' %}">{% csrf_token %}<button class="btn" style="padding:6px 16px;font-size:.85rem;">{% t 'accept_btn' %}</button></form>
+            <form method="post" action="{% url 'groups:handle_join_request' group.pk jr.pk 'reject' %}">{% csrf_token %}<button class="btn btn-outline"
+                    style="padding:6px 16px;font-size:.85rem;color:#ff4757;border-color:#ff4757;">{% t 'reject_btn' %}</button></form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if is_owner and pending_approvals %}
+<div style="margin-bottom:2rem;">
+    <h3>{% t 'pending_reviews_title' %} ({{ pending_approvals|length }})</h3>
+    {% for pa in pending_approvals %}
+    <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
+            <div>
+                <strong>{{ pa.post.title }}</strong>
+                <div style="font-size:.82rem;color:var(--secondary-color);">{% t 'by_author' %} @{{ pa.submitted_by.username }} · {{ pa.created_at|date:"M j, Y H:i" }}</div>
+            </div>
+            <a href="{% url 'posts:detail' pa.post.pk %}" class="btn btn-outline"
+                style="padding:5px 14px;font-size:.82rem;">{% t 'view_post' %}</a>
+        </div>
+        <form method="post" style="margin-top:.8rem;display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;">
+            {% csrf_token %}
+            <input type="text" name="comment" placeholder="{% t 'review_comment_placeholder' %}" class="form-control"
+                style="flex:1;min-width:200px;padding:8px 12px;font-size:.88rem;">
+            <button formaction="{% url 'groups:review_post' group.pk pa.pk 'approve' %}" class="btn"
+                style="padding:8px 18px;font-size:.88rem;">{% t 'approve_btn' %}</button>
+            <button formaction="{% url 'groups:review_post' group.pk pa.pk 'reject' %}" class="btn btn-outline"
+                style="padding:8px 18px;font-size:.88rem;color:#ff4757;border-color:#ff4757;">{% t 'reject_btn' %}</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;" class="group-detail-grid">
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0;">{% t 'group_notes' %}</h3>
+            {% if membership %}
+            <a href="{% url 'groups:add_note' group.pk %}" class="btn btn-outline">{% t 'add_note_btn' %}</a>
+            {% endif %}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for note in notes %}
+                {% include 'includes/post_card.html' with post=note compact=False show_save=True show_content=False %}
+            {% empty %}
+            <div class="card" style="padding: 2rem; text-align: center; color: var(--secondary-color);">
+                <p style="margin:0;">{% t 'no_notes_in_group' %}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div>
+        <h3 style="margin: 0 0 1.5rem 0;">{% t 'members' %} ({{ members.count }})</h3>
+        <div class="card" style="padding: 1rem;">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for m in members %}
+                <li style="margin-bottom: .8rem; padding-bottom: .8rem; border-bottom: 1px solid var(--glass-border);">
+                    <a href="{% url 'users:user_detail' m.user.username %}"
+                        style="display: flex; align-items: center; gap: .8rem; text-decoration: none; color: inherit;">
+                        <div class="clickable-avatar"
+                            style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--primary-color); display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: .9rem; flex-shrink:0;">
+                            {% if m.user.avatar %}<img src="{{ m.user.avatar.url }}"
+                                style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.innerText='{{ m.user.username|make_list|first|upper }}'">{% else %}{{ m.user.username|make_list|first|upper }}{% endif %}
+                        </div>
+                        <div style="flex: 1;">
+                            <span class="clickable-username" style="font-weight: 600; font-size: .95rem;">{{ m.user.username }}</span>
+                            <br>
+                            <span
+                                style="font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 10px; background-color: {% if m.role == 'teacher' %}var(--primary-color){% else %}var(--glass-border){% endif %}; color: {% if m.role == 'teacher' %}#000{% else %}inherit{% endif %}; font-weight: 500;">
+                                {% if m.role == 'teacher' %}{% t 'role_teacher' %}{% else %}{% t 'role_student' %}{% endif %}
+                            </span>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if membership %}
+<hr style="margin: 2.5rem 0; border: 0; border-top: 1px solid var(--glass-border);">
+<div class="card"
+    style="display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--primary-color), #4834d4); color: #fff; padding: 2rem; border-radius: 24px; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.2);">
+    <div>
+        <h2 style="margin: 0 0 0.5rem; font-weight: 800;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 10px;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> {% t 'group_chat' %}</h2>
+        <p style="margin: 0; opacity: 0.9; font-size: 1.05rem;">{% t 'messenger_subtitle' %}</p>
+    </div>
+    <a href="{% url 'groups:messenger' group.pk %}" class="btn"
+        style="background: #fff; color: #1a1a1a; font-weight: 800; padding: 1rem 2rem; border-radius: 15px; font-size: 1.1rem; text-decoration: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px;">
+        {% t 'open_chat' %} <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+
+{% block title %}{% t 'register_title'|default:'Регистрация' %} - SLearn{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 2rem auto; position: relative; overflow: hidden;">
+    <!-- Abstract decorative background blob inside card -->
+    <div
+        style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(29, 209, 161, 0.2); border-radius: 50%; filter: blur(30px); z-index: -1;">
+    </div>
+
+    <h2 class="text-center" style="margin-top: 0; font-size: 2.2rem; font-weight: 800; color: var(--text-color);">{% t 'create_account' %}</h2>
+    <p class="text-center" style="color: var(--secondary-color); margin-bottom: 2rem;">{% t 'register_subtitle' %}</p>
+
+    {% if form.non_field_errors %}
+    <div class="alert error" style="margin-bottom: 1.5rem; text-align: center;">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="registerForm" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div style="margin-bottom: 1.2rem; position: relative;">
+            <label for="{{ field.id_for_label }}" style="font-weight: 600; margin-bottom: 0.4rem; display: block;">{% t field.name %}</label>
+            {{ field }}
+
+            <span class="js-error error-text" style="display:none; margin-top: 0.5rem;"></span>
+
+            {% if field.help_text %}
+            <span class="help-text" style="margin-top: 0.5rem;">{{ field.help_text|safe }}</span>
+            {% endif %}
+
+            {% if field.errors %}
+            {% for error in field.errors %}
+            <span class="error-text" style="margin-top: 0.5rem; color: var(--error-color); display: flex; align-items: center; gap: 4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> {{ error }}</span>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn" id="submitBtn"
+            style="width: 100%; margin-top: 1.5rem; padding: 1rem; font-size: 1.1rem; border-radius: 14px;">{% t 'sign_up_btn' %}</button>
+    </form>
+
+    <div class="text-center" style="margin-top: 2rem; font-weight: 500;">
+        <p style="color: var(--secondary-color);">{% t 'already_account' %} <a href="{% url 'users:login' %}"
+                style="color: var(--primary-color); text-decoration: none; font-weight: 800;">{% t 'log_in_link' %}</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const usernameInput = document.querySelector('input[name="username"]');
+        const passInput = document.querySelector('input[type="password"]');
+
+        // Add form-control class to all inputs
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.classList.add('form-control');
+        });
+
+        if (usernameInput) {
+            usernameInput.addEventListener('input', function () {
+                const val = this.value;
+                const errSpan = this.parentElement.querySelector('.js-error');
+
+                const countAt = (val.match(/@/g) || []).length;
+
+                if (countAt > 1) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    errSpan.textContent = "{% t 'error_only_one_at' %}";
+                    errSpan.style.display = 'block';
+                } else if (val.includes('@') && !val.startsWith('@')) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    errSpan.textContent = "{% t 'error_at_start' %}";
+                    errSpan.style.display = 'block';
+                } else if (val.length > 0 && !/^@?[\w.+-]+$/.test(val)) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    errSpan.textContent = "{% t 'error_invalid_chars' %}";
+                    errSpan.style.display = 'block';
+                } else if (val.length >= 3) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                    errSpan.style.display = 'none';
+                    errSpan.textContent = "";
+                } else {
+                    this.classList.remove('invalid', 'valid');
+                    errSpan.style.display = 'none';
+                }
+            });
+        }
+
+        if (passInput) {
+            passInput.addEventListener('input', function () {
+                const val = this.value;
+                const errSpan = this.parentElement.querySelector('.js-error');
+
+                if (val.length > 0 && val.length < 8) {
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                    errSpan.textContent = "{% t 'error_pass_length' %}";
+                    errSpan.style.display = 'block';
+                } else if (val.length >= 8) {
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                    errSpan.style.display = 'none';
+                } else {
+                    this.classList.remove('invalid', 'valid');
+                    errSpan.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

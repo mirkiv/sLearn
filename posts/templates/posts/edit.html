@@ -1,0 +1,853 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{% t 'edit_post_title' %} - SLearn{% endblock %}
+{% block container_class %}editor-fullscreen{% endblock %}
+{% block container_style %}max-width:100%!important;margin:0!important;padding:0!important;{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+
+<style>
+    :root {
+        --ef: #3aaa85
+    }
+
+    .ep {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 65px);
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+        margin-top: 0 !important
+    }
+
+    .error-field {
+        border-color: var(--error-color) !important;
+        box-shadow: 0 0 0 2px rgba(255, 118, 117, 0.15) !important
+    }
+
+    .etop {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 18px;
+        border-bottom: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        flex-shrink: 0;
+        flex-wrap: wrap
+    }
+
+    .etitle {
+        flex: 1;
+        min-width: 180px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1.5px solid var(--glass-border);
+        background: var(--card-bg, #fff);
+        color: var(--text-color);
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s
+    }
+
+    .etitle:hover {
+        border-color: #aaa
+    }
+
+    .etitle:focus {
+        border-color: var(--ef);
+        box-shadow: 0 0 0 2px rgba(58, 170, 133, .15)
+    }
+
+    .etitle::placeholder {
+        color: #aaa;
+        font-weight: 400
+    }
+
+    [data-theme="light"] .etitle {
+        background: #fff;
+        border-color: #ccc
+    }
+
+    [data-theme="dark"] .etitle {
+        background: #1a1f24;
+        border-color: rgba(255, 255, 255, .15)
+    }
+
+    .eselect {
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: .85rem;
+        font-family: 'Inter', sans-serif;
+        border: 1.5px solid var(--glass-border);
+        background: var(--card-bg, #fff);
+        color: var(--text-color);
+        outline: none;
+        cursor: pointer;
+        min-width: 130px
+    }
+
+    [data-theme="light"] .eselect {
+        background: #fff;
+        border-color: #ccc
+    }
+
+    [data-theme="dark"] .eselect {
+        background: #1a1f24;
+        border-color: rgba(255, 255, 255, .15)
+    }
+
+    .eselect:focus {
+        border-color: var(--ef)
+    }
+
+    .etbar {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 5px 14px;
+        border-bottom: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        flex-shrink: 0;
+        flex-wrap: wrap
+    }
+
+    .tb {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--text-color);
+        font-size: .88rem;
+        font-weight: 500;
+        transition: background .15s;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif
+    }
+
+    .tb:hover {
+        background: var(--glass-border)
+    }
+
+    .tsep {
+        width: 1px;
+        height: 18px;
+        background: var(--glass-border);
+        margin: 0 3px;
+        flex-shrink: 0
+    }
+
+    .ebody {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0
+    }
+
+    .epane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0
+    }
+
+    .epane-left {
+        border-right: 1px solid var(--glass-border)
+    }
+
+    .elabel {
+        padding: 3px 14px;
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--secondary-color);
+        border-bottom: 1px solid var(--glass-border);
+        flex-shrink: 0;
+        background: var(--glass-bg)
+    }
+
+    .etarea {
+        flex: 1;
+        resize: none;
+        border: none;
+        outline: none;
+        padding: 18px 20px;
+        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+        font-size: .88rem;
+        line-height: 1.75;
+        color: var(--text-color);
+        background: transparent;
+        overflow-y: auto;
+        tab-size: 2;
+        min-height: 0
+    }
+
+    .etarea.drag-over {
+        background: rgba(58, 170, 133, .07);
+        outline: 2px dashed var(--ef);
+        outline-offset: -4px
+    }
+
+    .eprev {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 26px;
+        font-family: 'Inter', sans-serif;
+        font-size: .95rem;
+        line-height: 1.7;
+        min-height: 0
+    }
+
+    .eprev h1,
+    .eprev h2,
+    .eprev h3 {
+        margin-top: 1.3em;
+        font-family: 'Inter', sans-serif
+    }
+
+    .eprev code {
+        background: rgba(0, 0, 0, .07);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: .85em;
+        font-family: 'JetBrains Mono', monospace
+    }
+
+    [data-theme="dark"] .eprev code {
+        background: rgba(255, 255, 255, .09)
+    }
+
+    .eprev pre {
+        background: rgba(0, 0, 0, .06);
+        border-radius: 8px;
+        padding: 14px;
+        overflow-x: auto
+    }
+
+    [data-theme="dark"] .eprev pre {
+        background: rgba(255, 255, 255, .06)
+    }
+
+    .eprev blockquote {
+        border-left: 3px solid var(--ef);
+        margin: 0;
+        padding-left: 14px;
+        opacity: .75;
+        font-style: italic
+    }
+
+    .eprev table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0
+    }
+
+    .eprev th,
+    .eprev td {
+        border: 1px solid var(--glass-border);
+        padding: 7px 11px
+    }
+
+    .eprev th {
+        background: var(--glass-border)
+    }
+
+    .eprev a {
+        color: var(--ef)
+    }
+
+    .eprev img {
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 8px 0;
+        display: block
+    }
+
+    .fab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px 9px 11px;
+        border: 1.5px solid var(--glass-border);
+        border-radius: 10px;
+        background: var(--glass-bg);
+        text-decoration: none;
+        color: var(--text-color);
+        font-family: 'Inter', sans-serif;
+        font-size: .85rem;
+        margin: 5px 0;
+        transition: background .15s, box-shadow .15s, border-color .15s;
+        cursor: pointer;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden
+    }
+
+    .fab:hover {
+        background: rgba(58, 170, 133, .07);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+        border-color: var(--ef)
+    }
+
+    .fab-ico {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        line-height: 1
+    }
+
+    .fab-badge {
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--ef);
+        background: rgba(58, 170, 133, .12);
+        border-radius: 4px;
+        padding: 2px 6px;
+        flex-shrink: 0
+    }
+
+    .fab-name {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+        min-width: 0
+    }
+
+    .fab-dl {
+        font-size: .85rem;
+        opacity: .4;
+        flex-shrink: 0
+    }
+
+    .prev-empty {
+        color: var(--secondary-color);
+        opacity: .45;
+        font-style: italic
+    }
+
+    .upload-bar {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        font-size: .82rem;
+        color: var(--secondary-color);
+        border-bottom: 1px solid var(--glass-border);
+        background: var(--glass-bg)
+    }
+
+    .upload-bar.show {
+        display: flex
+    }
+
+    .upload-prog {
+        flex: 1;
+        height: 4px;
+        background: var(--glass-border);
+        border-radius: 2px;
+        overflow: hidden
+    }
+
+    .upload-fill {
+        height: 100%;
+        background: var(--ef);
+        border-radius: 2px;
+        width: 0;
+        transition: width .3s
+    }
+
+    #helpModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .5);
+        z-index: 500;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px)
+    }
+
+    #helpModal.open {
+        display: flex
+    }
+
+    .hbox {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        width: 560px;
+        max-width: 95vw;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 24px
+    }
+
+    .hrow {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 14px;
+        margin-bottom: 8px;
+        align-items: center
+    }
+
+    .hrow code {
+        background: rgba(0, 0, 0, .07);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: .82em;
+        font-family: 'JetBrains Mono', monospace
+    }
+
+    [data-theme="dark"] .hrow code {
+        background: rgba(255, 255, 255, .09)
+    }
+
+    .hsec {
+        font-weight: 600;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--secondary-color);
+        margin: 14px 0 4px;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 4px
+    }
+
+    @media(max-width:768px) {
+        .ep {
+            height: auto;
+            overflow: visible;
+        }
+
+        .etop {
+            padding: 10px 15px;
+            gap: 10px;
+            flex-direction: column;
+            align-items: stretch;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .etop .etitle#titleP {
+            width: 100%;
+            flex: none;
+        }
+        
+        .etop > div {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .etbar {
+            padding: 6px 10px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            position: sticky;
+            top: 105px; /* Adjust based on etop height */
+            z-index: 90;
+        }
+        
+        .etbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .ebody {
+            flex-direction: column;
+            overflow: visible;
+            display: block;
+        }
+
+        .epane {
+            height: auto;
+            overflow: visible;
+            display: block;
+        }
+
+        .epane-left {
+            border-right: none;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .etarea {
+            min-height: 300px;
+            height: auto;
+            overflow-y: visible;
+        }
+
+        .eprev {
+            min-height: 200px;
+            overflow-y: visible;
+            padding: 15px;
+        }
+        
+        .tsep {
+            height: 24px;
+            margin: 0 6px;
+        }
+    }
+
+    [data-theme="dark"] .eselect option {
+        background: #1a1f24;
+        color: #f5f6fa;
+    }
+
+    body.editor-mode {
+        overflow: hidden;
+    }
+
+    .editor-fullscreen {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+</style>
+
+<form method="post" enctype="multipart/form-data" id="EF" novalidate>
+    {% csrf_token %}
+    <div style="display:none">{{ form.as_p }}</div>
+    <input type="file" id="fileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.zip">
+
+    <div class="ep">
+        <div class="etop">
+            <input class="etitle" id="titleP" placeholder="{% t 'untitled_post' %}"
+                value="{{ form.title.value|default:'' }}">
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
+                <input class="etitle" id="tagsP" placeholder="#hashtags" style="flex:0.5;min-width:120px"
+                    value="{{ form.hashtags_input.value|default:'' }}" name="hashtags_input">
+                <select class="eselect" id="visP">
+                    <option value="public" {% if form.visibility.value == 'public' %}selected{% endif %}>{% t 'visibility_public' %}</option>
+                    <option value="friends" {% if form.visibility.value == 'friends' %}selected{% endif %}>{% t 'visibility_friends' %}</option>
+                    <option value="private" {% if form.visibility.value == 'private' %}selected{% endif %}>{% t 'visibility_private' %}</option>
+                </select>
+                <select class="eselect" id="typeP">
+                    {% for v,l in form.post_type.field.choices %}
+                        <option value="{{ v }}" {% if form.post_type.value == v %}selected{% endif %}>
+                            {% with t_key="type_"|add:v %}{% t t_key %}{% endwith %}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-outline" id="deletePostBtn" 
+                    style="padding:7px 10px; color:var(--error-color); border-color:var(--error-color); display:flex; align-items:center; transition: all 0.2s ease;" 
+                    onmouseover="this.style.backgroundColor='#3498db'; this.style.borderColor='#3498db'; this.style.color='#fff';" 
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='var(--error-color)'; this.style.color='var(--error-color)';"
+                    title="{% t 'delete_btn' %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+                <a href="{% url 'posts:detail' post.pk %}" class="btn btn-outline"
+                    style="padding:7px 14px;font-size:.88rem">{% t 'cancel' %}</a>
+                <button type="submit" class="btn" id="saveBtn" style="padding:7px 18px;font-size:.88rem">{% t 'save_changes' %}</button>
+            </div>
+        </div>
+
+        <div class="etbar">
+            <button type="button" class="tb" onclick="fmt('h1')" title="{% t 'help_headings' %} 1">H1</button>
+            <button type="button" class="tb" onclick="fmt('h2')" title="{% t 'help_headings' %} 2">H2</button>
+            <button type="button" class="tb" onclick="fmt('h3')" title="{% t 'help_headings' %} 3">H3</button>
+            <div class="tsep"></div>
+            <button type="button" class="tb" onclick="fmt('bold')" title="{% t 'help_bold' %}"><b>B</b></button>
+            <button type="button" class="tb" onclick="fmt('italic')" title="{% t 'help_italic' %}"><i>I</i></button>
+            <div class="tsep"></div>
+            <button type="button" class="tb" onclick="fmt('link')" title="{% t 'toolbar_link' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> {% t 'toolbar_link' %}</button>
+            <button type="button" class="tb" onclick="fmt('linktext')" title="{% t 'toolbar_link_text' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> {% t 'toolbar_link_text' %}</button>
+            <div class="tsep"></div>
+            <button type="button" class="tb" onclick="fmt('img')" title="{% t 'toolbar_image' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> {% t 'toolbar_image' %}</button>
+            <button type="button" class="tb" onclick="triggerUpload()" title="{% t 'toolbar_upload' %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> {% t 'toolbar_upload' %}</button>
+            <button type="button" class="tb" onclick="openHelp()" title="{% t 'help_title' %}"
+                style="font-weight:700;font-size:1.1rem;color:var(--ef);">?</button>
+        </div>
+
+        <div class="upload-bar" id="uploadBar">
+            <span id="uploadMsg">Uploading…</span>
+            <div class="upload-prog">
+                <div class="upload-fill" id="uploadFill"></div>
+            </div>
+        </div>
+
+        <div class="ebody">
+            <div class="epane epane-left">
+                <div class="elabel">{% t 'editor_label' %}</div>
+                <textarea class="etarea" id="MD"
+                    placeholder="{% t 'markdown_placeholder' %}">{{ form.content.value|default:'' }}</textarea>
+            </div>
+            <div class="epane">
+                <div class="elabel">{% t 'preview_label' %}</div>
+                <div class="eprev" id="PV">
+                    <p class="prev-empty">{% t 'markdown_placeholder' %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div id="helpModal">
+    <div class="hbox">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h2 style="margin:0;font-size:1.1rem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> {% t 'help_title' %}</h2>
+            <button onclick="closeHelp()"
+                style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-color)">✕</button>
+        </div>
+        <div class="hsec">{% t 'help_headings' %}</div>
+        <div class="hrow"><code># {% t 'help_headings' %} 1</code><span>→ <b style="font-size:1.1em">H1</b></span></div>
+        <div class="hrow"><code>## {% t 'help_headings' %} 2</code><span>→ H2</span></div>
+        <div class="hsec">{% t 'help_formatting' %}</div>
+        <div class="hrow"><code>**{% t 'help_bold' %}**</code><span>→ <b>{% t 'help_bold' %}</b></span></div>
+        <div class="hrow"><code>*{% t 'help_italic' %}*</code><span>→ <i>{% t 'help_italic' %}</i></span></div>
+        <div class="hsec">{% t 'help_links' %}</div>
+        <div class="hrow"><code>[https://example.com]</code><span>→ {% t 'help_link_url_only' %}</span></div>
+        <div class="hrow"><code>[https://example.com|{% t 'help_bold' %}]</code><span>→ {% t 'help_link_with_text' %}</span></div>
+        <div class="hsec">{% t 'help_images' %}</div>
+        <div class="hrow"><code>![https://…/img.png]</code><span>→ {% t 'help_image_desc' %}</span></div>
+        <div class="hrow"><code>![https://…/doc.pdf]</code><span>→ {% t 'help_file_desc' %}</span></div>
+        <div class="hrow" style="grid-template-columns:1fr"><span
+                style="color:var(--secondary-color);font-size:.85rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M9 18l6-6-6-6"></path></svg> {% t 'help_drag_drop' %}</span></div>
+        <div class="hsec">{% t 'help_latex' %}</div>
+        <div class="hrow"><code>$E = mc^2$</code><span>→ {% t 'help_latex_inline' %}</span></div>
+        <div class="hrow"><code>$$\int_0^\infty$$</code><span>→ {% t 'help_latex_block' %}</span></div>
+        <div class="hsec">{% t 'help_lists' %}</div>
+        <div class="hrow"><code>- item</code><span>→ {% t 'help_bullet' %}</span></div>
+        <div class="hrow"><code>&gt; text</code><span>→ {% t 'help_blockquote' %}</span></div>
+        <button onclick="closeHelp()" class="btn" style="margin-top:16px;width:100%">{% t 'help_got_it' %}</button>
+    </div>
+</div>
+
+<script>
+    var CSRF = '{{ csrf_token }}';
+    var UPLOAD_URL = '{% url "posts:upload_file" %}';
+    var md = document.getElementById('MD');
+    var pv = document.getElementById('PV');
+
+    document.getElementById('EF').addEventListener('submit', function (e) {
+        var title = document.getElementById('titleP');
+        var tagsInput = document.getElementById('tagsP');
+        var content = md;
+        var isValid = true;
+
+        // Clear previous errors
+        title.classList.remove('error-field');
+        tagsInput.classList.remove('error-field');
+        content.classList.remove('error-field');
+
+        var tagsVal = tagsInput.value.trim();
+        var tagsArray = tagsVal.split(/\s+/).filter(t => t.length > 0);
+        var tagRegex = /^#?[a-zA-Z0-9]{1,20}$/;
+        var isTagsValid = true;
+        var processedTags = [];
+
+        for (var i = 0; i < tagsArray.length; i++) {
+            if (!tagRegex.test(tagsArray[i])) {
+                isTagsValid = false;
+                break;
+            }
+            var t = tagsArray[i];
+            if (!t.startsWith('#')) t = '#' + t;
+            processedTags.push(t);
+        }
+
+        if (!title.value.trim()) { title.classList.add('error-field'); isValid = false; }
+        if (!tagsVal || !isTagsValid) {
+            tagsInput.classList.add('error-field');
+            showToast("{% t 'error_invalid_hashtags' %}", "error");
+            isValid = false;
+        }
+        if (!content.value.trim()) { content.classList.add('error-field'); isValid = false; }
+
+        if (!isValid) {
+            if (isValid && (!content.value.trim() || !title.value.trim())) showToast("{% t 'error_fill_fields' %}", "error");
+            e.preventDefault();
+            return false;
+        }
+
+        document.getElementById('id_title').value = title.value;
+        document.getElementById('id_content').value = content.value;
+        var pt = document.getElementById('id_post_type');
+        if (pt) pt.value = document.getElementById('typeP').value;
+        document.getElementById('id_hashtags_input').value = processedTags.join(' ');
+        var vis = document.getElementById('id_visibility');
+        if (vis) vis.value = document.getElementById('visP').value;
+    });
+
+    document.body.classList.add('editor-mode');
+
+    var FILE_ICONS = { pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>', img: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>' };
+    function fileIcon(ext) { 
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return FILE_ICONS.img;
+        return FILE_ICONS[ext] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>'; 
+    }
+    function buildFileBlock(url, name) {
+        url = url.trim();
+        name = (name && name.trim()) || url.split('/').pop().replace(/^[0-9a-f]{32,}_/, '');
+        var ext = name.split('.').pop().toLowerCase();
+        return '<a href="' + url + '" class="fab" download="' + name + '" target="_blank">' +
+            '<span class="fab-ico">' + fileIcon(ext) + '</span>' +
+            '<span class="fab-badge">.' + ext + '</span>' +
+            '<span class="fab-name">' + name + '</span>' +
+            '<span class="fab-dl">↓</span></a>';
+    }
+    function customImagesAndLinks(raw) {
+        var IMG = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
+        function mediaReplacer(url, alt) {
+            url = url.trim();
+            if (IMG.test(url)) return '<img src="' + url + '" alt="' + (alt || '') + '" style="max-width:100%;border-radius:8px;margin:8px 0;display:block;">';
+            return buildFileBlock(url, alt || null);
+        }
+        // ![alt](url)
+        raw = raw.replace(/!\[(.*?)\]\((.*?)\)/g, function (_, alt, url) { return mediaReplacer(url, alt); });
+        // ![url]
+        raw = raw.replace(/!\[([^\]]+)\]/g, function (_, url) { return mediaReplacer(url, null); });
+        // [url|text]
+        raw = raw.replace(/\[([^\|\[\]]+)\|([^\[\]]+)\]/g, function (_, url, txt) {
+            return '<a href="' + url.trim() + '" target="_blank">' + txt.trim() + '</a>';
+        });
+        // [url]
+        raw = raw.replace(/\[(https?:\/\/[^\[\]]+)\]/g, function (_, url) {
+            return '<a href="' + url.trim() + '" target="_blank">' + url.trim() + '</a>';
+        });
+        return raw;
+    }
+
+    function renderPreview() {
+        var text = md.value;
+        if (!text.trim()) { pv.innerHTML = '<p class="prev-empty">{% t "markdown_placeholder" %}</p>'; return; }
+        var stash = {}, sc = 0;
+        text = text.replace(/\$\$[\s\S]+?\$\$/g, function (m) { var k = 'LL' + sc + 'LL'; stash[k] = m; sc++; return k; });
+        text = text.replace(/\$[^\$\n]+?\$/g, function (m) { var k = 'LL' + sc + 'LL'; stash[k] = m; sc++; return k; });
+
+        // Apply images and links BEFORE marked parser
+        text = customImagesAndLinks(text);
+
+        var html = marked.parse(text);
+        for (var k in stash) html = html.split(k).join(stash[k]);
+
+        pv.innerHTML = html;
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(pv, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
+        }
+    }
+
+    md.addEventListener('input', renderPreview);
+    window.addEventListener('load', renderPreview);
+
+    function fmt(type) {
+        var s = md.selectionStart, e = md.selectionEnd;
+        var sel = md.value.substring(s, e), pre = md.value.substring(0, s), post = md.value.substring(e);
+        var r = sel, off = 0;
+        switch (type) {
+            case 'h1': r = '# ' + (sel || 'Heading 1'); break;
+            case 'h2': r = '## ' + (sel || 'Heading 2'); break;
+            case 'h3': r = '### ' + (sel || 'Heading 3'); break;
+            case 'bold': r = '**' + (sel || 'bold') + '**'; off = sel ? 0 : -2; break;
+            case 'italic': r = '*' + (sel || 'italic') + '*'; off = sel ? 0 : -1; break;
+            case 'link': r = '[' + (sel || 'https://example.com') + ']'; off = sel ? 0 : -1; break;
+            case 'linktext': r = '[https://example.com|' + (sel || 'text') + ']'; off = sel ? 0 : -1; break;
+            case 'img': r = '![' + (sel || 'https://') + ']'; off = -1; break;
+        }
+        md.value = pre + r + post;
+        md.selectionStart = md.selectionEnd = s + r.length + off;
+        md.focus(); renderPreview();
+    }
+
+    md.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab') { e.preventDefault(); var s = md.selectionStart; md.value = md.value.substring(0, s) + '  ' + md.value.substring(md.selectionEnd); md.selectionStart = md.selectionEnd = s + 2; }
+    });
+
+    function triggerUpload() { document.getElementById('fileInput').click(); }
+    document.getElementById('fileInput').addEventListener('change', function () { if (this.files[0]) uploadFile(this.files[0]); });
+
+    function uploadFile(file) {
+        var bar = document.getElementById('uploadBar'), fill = document.getElementById('uploadFill');
+        bar.classList.add('show'); fill.style.width = '0';
+        var fd = new FormData(); fd.append('file', file); fd.append('csrfmiddlewaretoken', CSRF);
+        var xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function (e) { if (e.lengthComputable) fill.style.width = (e.loaded / e.total * 100) + '%'; });
+        xhr.addEventListener('load', function () {
+            bar.classList.remove('show');
+            try {
+                var r = JSON.parse(xhr.responseText); if (r.error) { alert(r.error); return; }
+                // Use short syntax: ![/media/path/file.ext]
+                var syntax = '\n![' + r.url + ']\n';
+                insertAt(md, syntax); renderPreview();
+            }
+            catch (err) { alert('Upload error'); }
+        });
+        xhr.addEventListener('error', function () { bar.classList.remove('show'); alert('Upload failed'); });
+        xhr.open('POST', UPLOAD_URL); xhr.send(fd);
+    }
+
+    function insertAt(ta, text) { var s = ta.selectionStart; ta.value = ta.value.substring(0, s) + text + ta.value.substring(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + text.length; ta.focus(); }
+
+    md.addEventListener('dragover', function (e) { e.preventDefault(); md.classList.add('drag-over'); });
+    md.addEventListener('dragleave', function () { md.classList.remove('drag-over'); });
+    md.addEventListener('drop', function (e) { e.preventDefault(); md.classList.remove('drag-over'); var f = e.dataTransfer.files[0]; if (f) uploadFile(f); });
+    md.addEventListener('paste', function (e) {
+        var items = e.clipboardData && e.clipboardData.items; if (!items) return;
+        for (var i = 0; i < items.length; i++) { if (items[i].type.indexOf('image/') === 0) { e.preventDefault(); var f = items[i].getAsFile(); if (f) uploadFile(f); return; } }
+    });
+
+    function openHelp() { document.getElementById('helpModal').classList.add('open'); }
+    function closeHelp() { document.getElementById('helpModal').classList.remove('open'); }
+    document.getElementById('helpModal').addEventListener('click', function (e) { if (e.target === document.getElementById('helpModal')) closeHelp(); });
+
+    // Delete Post Logic
+    document.getElementById('deletePostBtn')?.addEventListener('click', function() {
+        if (typeof showModal === 'function') {
+            showModal(
+                "{% t 'confirm_title' %}", 
+                "{% t 'confirm_delete_post_msg' %}", 
+                [
+                    {
+                        text: "{% t 'delete_btn' %}",
+                        type: "danger",
+                        callback: () => {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = "{% url 'posts:delete' post.pk %}";
+                            const csrf = document.createElement('input');
+                            csrf.type = 'hidden';
+                            csrf.name = 'csrfmiddlewaretoken';
+                            csrf.value = CSRF;
+                            form.appendChild(csrf);
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    },
+                    {
+                        text: "{% t 'cancel' %}",
+                        type: "secondary"
+                    }
+                ]
+            );
+        } else {
+            if (confirm("{% t 'confirm_delete_post_msg' %}")) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{% url 'posts:delete' post.pk %}";
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = CSRF;
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{% t 'combine_notes_title' %} - SLearn{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--primary-color); margin-top: 0;">{% t 'ai_note_combination' %}</h2>
+    <p>{% t 'ai_combination_desc' %}</p>
+    
+    <form method="post" style="margin-top: 2rem;">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 2rem;">
+            {% for note in notes %}
+            <label style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; background-color: var(--bg-color);">
+                <input type="checkbox" name="notes" value="{{ note.id }}" style="width: 20px; height: 20px; accent-color: var(--primary-color);">
+                <div style="flex: 1;">
+                    <strong style="font-size: 1.1rem;">{{ note.title }}</strong>
+                    <br>
+                    <span style="font-size: 0.9rem; color: var(--secondary-color);">{% t 'created_date' %} {{ note.created_at|date:"M j, Y" }}</span>
+                </div>
+            </label>
+            {% empty %}
+            <p style="text-align: center; color: var(--secondary-color);">{% t 'no_notes_created' %}</p>
+            {% endfor %}
+        </div>
+        
+        <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; padding: 1rem;">{% t 'combine_selected_btn' %}</button>
+    </form>
+</div>
+
+<div id="ai-loading" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--glass-bg); backdrop-filter:blur(10px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+    <div style="width: 60px; height: 60px; border: 8px solid rgba(29, 209, 161, 0.2); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 2rem;"></div>
+    <h2 style="color: var(--primary-color);">{% t 'gemini_processing' %}</h2>
+    <p style="font-size: 1.1rem; color: var(--secondary-color);">{% t 'may_take_seconds' %}</p>
+</div>
+<style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        // Only show if at least two notes are checked
+        if (document.querySelectorAll('input[name="notes"]:checked').length >= 2) {
+            document.getElementById('ai-loading').style.display = 'flex';
+        }
+    });
+</script>
+{% endblock %}

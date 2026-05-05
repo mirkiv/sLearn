@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load markdown_extras custom_dict %}
+{% block title %}{% t 'combined_result_title' %} - SLearn{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>{% t 'ai_generated_guide' %}</h2>
+    <a href="{% url 'ai_tools:combine' %}" class="btn btn-outline">{% t 'back_to_ai' %}</a>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <p style="color: var(--secondary-color); margin-top: 0;"><strong>{% t 'sources_used' %}</strong> 
+        {% for note in selected_notes %}{{ note.title }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </p>
+</div>
+
+<div class="card markdown-body" style="line-height: 1.8; font-size: 1.1rem;">{{ result|markdown }}</div>
+
+<div style="margin-top: 2rem; text-align: center;">
+    <button class="btn" onclick="window.print()" style="font-size: 1.1rem; padding: 1rem 2rem;">{% t 'print_save_pdf' %}</button>
+</div>
+{% endblock %}

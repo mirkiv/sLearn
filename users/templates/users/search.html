@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{% t 'search' %} - SLearn{% endblock %}
+
+{% block content %}
+<style>
+    .search-page {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .search-bar-wrapper {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-bar-wrapper input {
+        flex: 1;
+        padding: 11px 16px;
+        border-radius: 10px;
+        font-size: 1rem;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        color: var(--text-color);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .search-bar-wrapper input:focus {
+        border-color: var(--primary-color);
+    }
+
+    .search-bar-wrapper button {
+        padding: 11px 20px;
+        border-radius: 10px;
+        border: none;
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .search-bar-wrapper button:hover {
+        background: var(--primary-hover);
+    }
+
+    .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-color);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tag-pill:hover {
+        background: rgba(29, 209, 161, 0.05);
+        border-color: rgba(29, 209, 161, 0.5);
+    }
+    .tag-pill.active {
+        background: rgba(29, 209, 161, 0.15);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+    .tag-close {
+        font-size: 0.75rem;
+        opacity: 0.5;
+        transition: 0.2s;
+    }
+    .tag-pill.active:hover .tag-close {
+        opacity: 1;
+        color: var(--text-color);
+    }
+
+    /* Result cards */
+    .result-section {
+        display: none;
+    }
+
+    .result-section.visible {
+        display: block;
+    }
+
+    .user-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: var(--glass-bg);
+        transition: border-color 0.15s;
+    }
+
+    .user-card:hover {
+        border-color: var(--primary-color);
+    }
+
+    .user-card-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-avatar-sm {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--primary-color);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .user-avatar-sm img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-card-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .post-card {
+        padding: 14px 16px;
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: var(--glass-bg);
+        transition: border-color 0.15s;
+        text-decoration: none;
+        display: block;
+        color: var(--text-color);
+    }
+
+    .post-card:hover {
+        border-color: var(--primary-color);
+    }
+
+    .post-card-title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 4px;
+    }
+
+    .post-card-meta {
+        font-size: 0.78rem;
+        color: var(--secondary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--secondary-color);
+    }
+
+    .empty-state div {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+    }
+
+    .highlight {
+        background: rgba(var(--primary-rgb, 29, 209, 161), 0.15);
+        border-radius: 3px;
+        padding: 0 2px;
+    }
+</style>
+
+<div class="search-page">
+    <h1 style="margin: 0 0 1.2rem; font-size: 1.4rem;">{% t 'search' %}</h1>
+
+    <form method="get" class="search-bar-wrapper" id="searchForm" style="flex-direction:column;gap:15px;margin-bottom:1.5rem;display:flex;">
+        <div style="display:flex; gap:10px;">
+            <input type="text" name="q" id="searchInput" value="{{ query }}" placeholder="{% t 'search_placeholder' %}" autocomplete="off" style="flex:1;">
+            <button type="submit" class="btn">{% t 'search' %}</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <!-- Users Group -->
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label class="tag-pill {% if 'users' in tags %}active{% endif %}" id="pill-users">
+                    <input type="checkbox" name="tags" value="users" class="tag-checkbox" {% if 'users' in tags %}checked{% endif %} style="display:none;">
+                    {% t 'users' %}
+                    <span class="tag-close" style="{% if 'users' not in tags %}display:none;{% endif %}">✕</span>
+                </label>
+                <div class="advanced-filters filter-users" style="{% if 'users' not in tags %}display:none;{% else %}display:flex;{% endif %} gap:8px;">
+                    <input type="text" name="u_username" value="{{ u_username }}" placeholder="{% t 'search_username_placeholder' %}" class="form-control" style="flex: 1; min-width: 140px; font-size:0.85rem;padding:6px 12px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-bg);color:var(--text-color);">
+                </div>
+            </div>
+
+            <!-- Posts Group -->
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label class="tag-pill {% if 'posts' in tags %}active{% endif %}" id="pill-posts">
+                    <input type="checkbox" name="tags" value="posts" class="tag-checkbox" {% if 'posts' in tags %}checked{% endif %} style="display:none;">
+                    {% t 'search_posts'|default:'Посты' %}
+                    <span class="tag-close" style="{% if 'posts' not in tags %}display:none;{% endif %}">✕</span>
+                </label>
+                <div class="advanced-filters filter-posts" style="{% if 'posts' not in tags %}display:none;{% else %}display:flex;{% endif %} gap:8px;">
+                    <select name="p_type" class="form-control" style="flex: 1; min-width: 140px; font-size:0.85rem;padding:6px 12px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-bg);color:var(--text-color);" onchange="document.getElementById('searchForm').dispatchEvent(new Event('submit'))">
+                        <option value="">{% t 'any_type' %}</option>
+                        <option value="note" {% if p_type == 'note' %}selected{% endif %}>{% t 'note' %}</option>
+                        <option value="standard" {% if p_type == 'standard' %}selected{% endif %}>{% t 'standard_post' %}</option>
+                        <option value="question" {% if p_type == 'question' %}selected{% endif %}>{% t 'type_question'|default:'Вопрос' %}</option>
+                    </select>
+                    <input type="text" name="p_tags" value="{{ p_tags }}" placeholder="{% t 'hashtags_placeholder' %}" class="form-control" style="flex: 1; min-width: 140px; font-size:0.85rem;padding:6px 12px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-bg);color:var(--text-color);">
+                </div>
+            </div>
+
+            <!-- Groups Group -->
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label class="tag-pill {% if 'groups' in tags %}active{% endif %}" id="pill-groups">
+                    <input type="checkbox" name="tags" value="groups" class="tag-checkbox" {% if 'groups' in tags %}checked{% endif %} style="display:none;">
+                    {% t 'groups'|default:'Группы' %}
+                    <span class="tag-close" style="{% if 'groups' not in tags %}display:none;{% endif %}">✕</span>
+                </label>
+                <div class="advanced-filters filter-groups" style="{% if 'groups' not in tags %}display:none;{% else %}display:flex;{% endif %} gap:8px;">
+                    <input type="text" name="g_user" value="{{ g_user }}" placeholder="{% t 'group_member_placeholder' %}" class="form-control" style="flex: 1; min-width: 140px; font-size:0.85rem;padding:6px 12px;border:1px solid var(--glass-border);border-radius:10px;background:var(--glass-bg);color:var(--text-color);">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:center; margin-top:5px;">
+            <button type="submit" class="btn btn-outline" style="padding:6px 24px; font-size:0.85rem; width:auto;">{% t 'apply_filters' %}</button>
+        </div>
+    </form>
+
+    {% if query or u_username or p_type or p_tags or g_user %}
+    
+    <!-- Users Section -->
+    {% if 'users' in tags %}
+    <div class="result-section visible">
+        {% if user_results %}
+        <h4 style="margin: 0 0 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--secondary-color);">{% t 'users' %} ({{ user_results|length }})</h4>
+        {% endif %}
+        {% for u in user_results %}
+        <div class="user-card">
+            <a href="{% url 'users:user_detail' u.username %}" class="user-card-left"
+                style="text-decoration: none; color: inherit;">
+                <div class="user-avatar-sm" style="overflow: hidden;">
+                    {% if u.avatar %}<img src="{{ u.avatar.url }}">{% else %}<img src="https://ui-avatars.com/api/?name={{ u.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;">{% endif %}
+                </div>
+                <div>
+                    <strong style="display:block;">{{ u.first_name|default:u.username }}</strong>
+                    <div style="font-size:0.78rem; color:var(--secondary-color);">@{{ u.username }} • {{ u.followers.count }} {% t 'followers' %}</div>
+                </div>
+            </a>
+            <div class="user-card-actions">
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'users:toggle_follow' u.username %}"
+                    class="btn {% if u in request.user.following.all %}btn-outline{% endif %}"
+                    style="padding: 7px 14px; font-size: 0.85rem;">
+                    {% if u in request.user.following.all %}{% t 'unfollow' %}{% else %}{% t 'follow_btn' %}{% endif %}
+                </a>
+                <a href="{% url 'chat:detail' u.username %}" class="btn"
+                    style="padding: 7px 14px; font-size: 0.85rem; background: #3498db;">{% t 'message_btn' %}</a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+            <p>{% t 'no_users_found' %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Posts Section -->
+    {% if 'posts' in tags %}
+    <div class="result-section visible">
+        {% if post_results %}
+        <h4 style="margin: 16px 0 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--secondary-color);">{% t 'search_posts'|default:'Посты' %} ({{ post_results|length }})</h4>
+        {% endif %}
+        {% for p in post_results %}
+        <a href="{% url 'posts:detail' p.pk %}" class="post-card">
+            <div class="post-card-title">{{ p.title|default:"—" }}</div>
+            <div class="post-card-meta">{% t 'by_author' %} <span style="color:var(--primary-color); font-weight:600;">@{{ p.author.username }}</span> · {{ p.created_at|date:"d M Y" }}</div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <div><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+            <p>{% t 'no_results' %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Groups Section -->
+    {% if 'groups' in tags %}
+    <div class="result-section visible">
+        {% if group_results %}
+        <h4 style="margin: 16px 0 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--secondary-color);">{% t 'groups'|default:'Группы' %} ({{ group_results|length }})</h4>
+        {% endif %}
+        {% for g in group_results %}
+        <a href="{% url 'groups:detail' g.pk %}" class="post-card">
+            <div class="post-card-title">{{ g.name|default:"—" }}</div>
+            <div class="post-card-meta">{{ g.description|truncatechars:50 }}</div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <div><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+            <p>{% t 'no_results' %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not user_results and not post_results and not group_results %}
+    <div class="empty-state">
+        <div><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+        <p>{% t 'no_results' %} <strong>«{{ query }}»</strong></p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <div><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+        <p>{% t 'search_users_prompt'|default:'Введите запрос для поиска' %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Debounced live search
+    const input = document.getElementById('searchInput');
+    const form = document.getElementById('searchForm');
+    let debounceTimer;
+    input.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            if (this.value.trim().length >= 2) {
+                // To do true AJAX we would fetch and replace the DOM.
+                // For now, we submit seamlessly by triggering a form submit event,
+                // but the user just requested tag toggling to be seamless without reload.
+                // Live search on text input can still reload if that's acceptable,
+                // or we can implement full AJAX. Let's stick to full page submit for text input
+                // but no submit on tag toggling (until apply filters is clicked).
+                form.dispatchEvent(new Event('submit'));
+            }
+        }, 400);
+    });
+
+    // Seamless Tag Toggling
+    const tagCheckboxes = document.querySelectorAll('.tag-checkbox');
+    tagCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function(e) {
+            const checkedCount = document.querySelectorAll('.tag-checkbox:checked').length;
+            
+            // Prevent removing the last tag
+            if (checkedCount === 0) {
+                this.checked = true;
+                if (typeof showToast === 'function') {
+                    showToast('Минимум 1 тег должен быть выбран для поиска', 'error');
+                }
+                e.preventDefault();
+                return false;
+            }
+
+            const pill = this.closest('.tag-pill');
+            const closeBtn = pill.querySelector('.tag-close');
+            const filterContainer = document.querySelector('.filter-' + this.value);
+            
+            if (this.checked) {
+                pill.classList.add('active');
+                closeBtn.style.display = 'inline';
+                if(filterContainer) filterContainer.style.display = 'flex';
+            } else {
+                pill.classList.remove('active');
+                closeBtn.style.display = 'none';
+                if(filterContainer) {
+                    filterContainer.style.display = 'none';
+                    // clear its inputs
+                    filterContainer.querySelectorAll('input, select').forEach(inp => {
+                        inp.value = '';
+                    });
+                }
+            }
+        });
+    });
+
+    form.addEventListener('submit', function(e) {
+        // Full seamless fetch-based result loading
+        e.preventDefault();
+        const url = new URL(form.action || window.location.href);
+        const formData = new FormData(form);
+        const searchParams = new URLSearchParams(formData);
+        
+        // Push state for URL
+        window.history.pushState({}, '', url.pathname + '?' + searchParams.toString());
+
+        fetch(url.pathname + '?' + searchParams.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // We just need to replace the result sections
+            // Or easier: replace the whole search-page but keep the input values focused
+            const newSearchPage = doc.querySelector('.search-page');
+            const currentSearchPage = document.querySelector('.search-page');
+            
+            // Better to only update the result sections to not lose focus
+            const sectionsToUpdate = ['users', 'posts', 'groups'];
+            
+            // Remove existing result sections and empty states
+            document.querySelectorAll('.result-section').forEach(el => el.remove());
+            document.querySelectorAll('.empty-state').forEach(el => {
+                // keep the one that says "Введите запрос" if it exists, actually let's just wipe all empty states that are direct children of search-page
+                if(el.parentElement.classList.contains('search-page')) {
+                    el.remove();
+                }
+            });
+
+            // Append new result sections from parsed doc
+            doc.querySelectorAll('.result-section, .empty-state').forEach(el => {
+                if(el.parentElement.classList.contains('search-page')) {
+                    currentSearchPage.appendChild(el);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

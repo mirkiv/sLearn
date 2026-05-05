@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ note.title }} - SLearn{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <h2 style="color: var(--primary-color); margin-top: 0; font-size: 2.5rem;">{{ note.title }}</h2>
+    <p style="color: var(--secondary-color);">
+        Author: <strong>@{{ note.author.username }}</strong> | Date: {{ note.created_at|date:"F j, Y" }}
+        <br>Visibility: <span style="text-transform: capitalize;">{{ note.visibility }}</span>
+        {% if note.group %} | Group: <a href="{% url 'groups:detail' note.group.pk %}">{{ note.group.name }}</a>{% endif %}
+    </p>
+</div>
+
+{% for chapter in chapters %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    {% if chapter.title %}<h3 style="margin-top: 0;">{{ chapter.title }}</h3>{% endif %}
+    <div style="line-height: 1.6; font-size: 1.1rem; white-space: pre-wrap;">{{ chapter.text_content }}</div>
+    {% if chapter.image %}
+    <div style="margin-top: 1rem;">
+        <img src="{{ chapter.image.url }}" alt="Chapter Image" style="max-width: 100%; border-radius: 8px;">
+    </div>
+    {% endif %}
+</div>
+{% empty %}
+<div class="card" style="margin-bottom: 1.5rem; text-align: center; color: var(--secondary-color);">
+    <p>This note currently has no content chapters.</p>
+</div>
+{% endfor %}
+
+{% if note.author == request.user %}
+<div class="card" style="margin-top: 2rem; border-left: 4px solid var(--primary-color);">
+    <h3 style="margin-top: 0;">Add a new Chapter</h3>
+    <form method="post" action="{% url 'notes:add_chapter' note.pk %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ chapter_form.as_p }}
+        <button type="submit" class="btn">Add Chapter</button>
+    </form>
+</div>
+{% endif %}
+
+{% if attachments %}
+<div class="card" style="margin-top: 2rem;">
+    <h3 style="margin-top: 0;">Attachments</h3>
+    <ul>
+        {% for attachment in attachments %}
+        <li><a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

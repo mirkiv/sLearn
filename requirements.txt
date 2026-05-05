@@ -1,0 +1,9 @@
+Django>=5.0
+python-dotenv
+psycopg2-binary
+google-generativeai
+Pillow
+markdown
+bleach
+django-debug-toolbar
+whitenoise

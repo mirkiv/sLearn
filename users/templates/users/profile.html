@@ -1,0 +1,555 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+
+{% block title %}{{ profile_user.username }} - {% t 'profile' %}{% endblock %}
+
+{% block container_style %}max-width: 1100px; padding-top: 1rem;{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* Header Section */
+    .profile-header {
+        position: relative;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: var(--glass-shadow);
+        margin-top: 40px;
+    }
+
+    .profile-cover {
+        height: 180px;
+        background: linear-gradient(135deg, var(--primary-color), #4834d4);
+        opacity: 0.8;
+        position: relative;
+    }
+
+    .profile-info-wrapper {
+        padding: 0 40px 30px 40px;
+        display: flex;
+        align-items: flex-end;
+        gap: 2rem;
+        margin-top: -60px;
+    }
+
+    .profile-avatar-large {
+        width: 160px;
+        height: 160px;
+        border-radius: 40px;
+        background: var(--bg-color);
+        border: 6px solid var(--glass-bg);
+        object-fit: cover;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--primary-color);
+        font-weight: 800;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+    }
+
+    .profile-main-meta {
+        flex: 1;
+        padding-bottom: 10px;
+    }
+
+    .profile-name {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .profile-username {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        padding-bottom: 15px;
+    }
+
+    .profile-stats-row {
+        display: flex;
+        gap: 2.5rem;
+        padding: 20px 40px;
+        background: rgba(255, 255, 255, 0.03);
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--primary-color);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tabs Section */
+    .profile-content-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 2rem;
+    }
+
+    .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .sidebar-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 24px;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95rem;
+    }
+
+    .info-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: rgba(var(--primary-rgb), 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+    }
+
+    .profile-tabs-wrapper {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .tabs-header {
+        display: flex;
+        background: rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid var(--glass-border);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .tabs-header::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 18px;
+        border: none;
+        background: none;
+        color: var(--secondary-color);
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        border-bottom: 3px solid transparent;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        min-width: fit-content;
+    }
+
+    .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+        background: rgba(var(--primary-rgb), 0.05);
+    }
+
+    .tab-pane {
+        display: none;
+        padding: 24px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* List Items */
+    .profile-post-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 16px;
+        transition: 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .profile-post-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        transform: translateX(5px);
+    }
+
+    .user-list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        transition: 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .user-list-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .user-list-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+
+    .group-list-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        margin-bottom: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: 0.3s;
+    }
+
+    .group-list-item:hover {
+        transform: translateY(-3px);
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .group-icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    @media (max-width: 850px) {
+        .profile-content-grid {
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .profile-info-wrapper {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: -80px;
+            padding: 0 20px 25px 20px;
+        }
+
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 30px;
+            font-size: 3rem;
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            justify-content: center;
+        }
+
+        .profile-actions {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .profile-stats-row {
+            padding: 15px 20px;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Header Card -->
+    <div class="profile-header">
+        <div class="profile-cover"></div>
+        <div class="profile-info-wrapper">
+            {% if profile_user.avatar %}
+            <img src="{{ profile_user.avatar.url }}" alt="Avatar" class="profile-avatar-large" onerror="this.src='https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true'">
+            {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" alt="Avatar" class="profile-avatar-large">
+            {% endif %}
+
+            <div class="profile-main-meta">
+                <h1 class="profile-name">
+                    {{ profile_user.first_name|default:profile_user.username }}
+                    {% if profile_user.is_staff %}<span title="{% t 'staff' %}" style="font-size: 1.2rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; color: var(--primary-color);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>{% endif %}
+                </h1>
+                <div class="profile-username">@{{ profile_user.username }}</div>
+
+                <div class="profile-actions">
+                    {% if request.user == profile_user %}
+                    <a href="{% url 'users:edit_profile' %}" class="btn">
+                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span> {% t 'edit_profile' %}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'users:toggle_follow' profile_user.username %}"
+                        class="btn {% if is_following %}btn-outline{% endif %}">
+                        {% if is_following %}
+                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> {% t 'unfollow_btn' %}
+                        {% else %}
+                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span> {% t 'follow_btn' %}
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'chat:detail' profile_user.username %}" class="btn btn-outline">
+                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></span> {% t 'send_message' %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-stats-row">
+            <div class="stat-item">
+                <span class="stat-value">{{ user_posts.count }}</span>
+                <span class="stat-label">{% t 'posts_count' %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ followers.count }}</span>
+                <span class="stat-label">{% t 'followers' %}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ following.count }}</span>
+                <span class="stat-label">{% t 'following' %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="profile-content-grid">
+        <!-- Sidebar Info -->
+        <div class="profile-sidebar">
+            <div class="sidebar-card">
+                <div class="card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> {% t 'about' %}</div>
+                <div class="info-list">
+                    <div class="info-item">
+                        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">{% t 'joined_on' %}</div>
+                            <div style="font-weight: 600;">{{ profile_user.date_joined|date:"d M Y" }}</div>
+                        </div>
+                    </div>
+                    {% if profile_user.email and request.user == profile_user %}
+                    <div class="info-item">
+                        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+                        <div>
+                            <div style="font-size: 0.75rem; opacity: 0.7;">{% t 'email' %}</div>
+                            <div style="font-weight: 600;">{{ profile_user.email }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user_groups %}
+            <div class="sidebar-card">
+                <div class="card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {% t 'groups_member' %}</div>
+                {% for membership in user_groups|slice:":5" %}
+                <a href="{% url 'groups:detail' membership.group.pk %}" class="user-list-item">
+                    <div
+                        style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; overflow: hidden;">
+                        <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <span style="font-weight: 600; font-size: 0.9rem;">{{ membership.group.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tabs Content -->
+        <div class="profile-tabs-wrapper">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="openTab(event, 'postsTab')">{% t 'my_posts' %}</button>
+                <button class="tab-btn" onclick="openTab(event, 'groupsTab')">{% t 'groups' %}</button>
+                <button class="tab-btn" onclick="openTab(event, 'followersTab')">{% t 'followers' %}</button>
+                <button class="tab-btn" onclick="openTab(event, 'followingTab')">{% t 'following' %}</button>
+            </div>
+
+            <!-- Posts Tab -->
+            <div id="postsTab" class="tab-pane active">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% if user_posts %}
+                        {% for post in user_posts %}
+                            {% include 'includes/post_card.html' with post=post compact=False show_save=False %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="notif-empty">{% t 'no_posts_user' %}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Groups Tab -->
+            <div id="groupsTab" class="tab-pane">
+                {% if user_groups %}
+                {% for membership in user_groups %}
+                <a href="{% url 'groups:detail' membership.group.pk %}" class="group-list-item">
+                    <div class="group-icon-box" style="padding:0; overflow:hidden;">
+                        <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 1.1rem;">{{ membership.group.name }}</div>
+                        <div style="font-size: 0.85rem; color: var(--secondary-color);">
+                            {{ membership.get_role_display }} • {% t 'members_count' count=membership.group.memberships.count %}
+                        </div>
+                    </div>
+                    <div style="font-size: 1.2rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div class="notif-empty">{% t 'no_groups_user' %}</div>
+                {% endif %}
+            </div>
+
+            <!-- Followers Tab -->
+            <div id="followersTab" class="tab-pane">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                    {% for f in followers %}
+                    <a href="{% url 'users:user_detail' f.username %}" class="user-list-item"
+                        style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);">
+                        <div class="clickable-avatar">
+                            {% if f.avatar %}
+                            <img src="{{ f.avatar.url }}" class="user-list-avatar">
+                            {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="user-list-avatar">
+                            {% endif %}
+                        </div>
+                        <div style="min-width: 0;">
+                            <div class="clickable-username"
+                                style="font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis;">
+                                {{ f.username }}</div>
+                            <div style="font-size: 0.75rem; color: var(--secondary-color);">@{{ f.username }}</div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="notif-empty" style="grid-column: 1/-1;">{% t 'no_followers' %}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Following Tab -->
+            <div id="followingTab" class="tab-pane">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                    {% for f in following %}
+                    <a href="{% url 'users:user_detail' f.username %}" class="user-list-item"
+                        style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);">
+                        <div class="clickable-avatar">
+                            {% if f.avatar %}
+                            <img src="{{ f.avatar.url }}" class="user-list-avatar">
+                            {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="user-list-avatar">
+                            {% endif %}
+                        </div>
+                        <div style="min-width: 0;">
+                            <div class="clickable-username"
+                                style="font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis;">
+                                {{ f.username }}</div>
+                            <div style="font-size: 0.75rem; color: var(--secondary-color);">@{{ f.username }}</div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="notif-empty" style="grid-column: 1/-1;">{% t 'no_following' %}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabpane, tablinks;
+        tabpane = document.getElementsByClassName("tab-pane");
+        for (i = 0; i < tabpane.length; i++) {
+            tabpane[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load markdown_extras custom_dict %}
+{% block title %}{% t 'my_posts' %} - SLearn{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h2 style="margin: 0;">{% t 'my_posts' %}</h2>
+    <a href="{% url 'posts:create' %}" class="btn">{% t 'write_new_post' %}</a>
+</div>
+
+<div class="card-grid">
+    {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post compact=True %}
+    {% empty %}
+        <p style="color: var(--secondary-color); grid-column: 1/-1;">{% t 'no_posts' %}</p>
+    {% endfor %}
+</div>
+{% endblock %}

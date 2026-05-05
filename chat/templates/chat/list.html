@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{% t 'messages' %} - SLearn{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top: 0; color: var(--primary-color);">{% t 'discussions' %}</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem;">
+        <div>
+            <h3 style="margin-bottom: 1rem;">{% t 'recent' %}</h3>
+            {% if recent_users %}
+            <ul style="list-style: none; padding: 0;">
+                {% for u in recent_users %}
+                <li style="margin-bottom: 0.5rem;">
+                    <a href="{% url 'chat:detail' u.username %}" class="btn btn-outline" style="display: block; text-align: left; padding: 0.8rem;">
+                        <strong>@{{ u.username }}</strong>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--secondary-color);">{% t 'no_recent_messages' %}</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h3 style="margin-bottom: 1rem;">{% t 'start_new_chat' %}</h3>
+            {% if all_users %}
+            <ul style="list-style: none; padding: 0;">
+                {% for u in all_users %}
+                <li style="margin-bottom: 0.5rem;">
+                    <a href="{% url 'chat:detail' u.username %}" class="btn" style="display: block; text-align: left; padding: 0.8rem; background-color: var(--nav-bg); color: var(--text-color);">
+                        {% t 'chat_with_prefix' %} <strong>@{{ u.username }}</strong>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--secondary-color);">{% t 'no_other_users' %}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

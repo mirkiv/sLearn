@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+{% block title %}{% t 'chat_with_prefix' %} {{ other_user.username }} - SLearn{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">{% t 'chat_with_prefix' %} <span style="color: var(--primary-color);">@{{ other_user.username }}</span></h2>
+    <a href="{% url 'chat:list' %}" class="btn btn-outline">{% t 'back_to_messages' %}</a>
+</div>
+
+<div class="card" style="height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; background-color: var(--nav-bg);">
+    {% for msg in chat_messages %}
+    <div style="max-width: 70%; padding: 1rem; border-radius: 8px; {% if msg.sender == request.user %}background-color: var(--primary-color); color: #000; align-self: flex-end; border-bottom-right-radius: 0;{% else %}background-color: var(--card-bg); align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid var(--border-color);{% endif %}">
+        <p style="margin: 0 0 0.5rem 0; font-size: 1.05rem; white-space: pre-wrap;">{{ msg.text }}</p>
+        {% if msg.attachment %}
+        <div style="margin-top: 0.5rem;">
+            <a href="{{ msg.attachment.url }}" target="_blank" style="color: inherit; text-decoration: underline; font-weight: bold; font-size: 0.9rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> {% t 'attachment_text' %}
+            </a>
+        </div>
+        {% endif %}
+        <span style="font-size: 0.75rem; opacity: 0.7; display: block; text-align: right; margin-top: 0.3rem;">
+            {{ msg.created_at|date:"M j, H:i" }}
+        </span>
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: var(--secondary-color); margin: auto;">{% t 'no_messages_say_hi' %}</p>
+    {% endfor %}
+</div>
+
+<div class="card" style="padding: 1rem 1.5rem; border-radius: 30px;">
+    <form method="post" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center;">
+        {% csrf_token %}
+        
+        <!-- Attachment Icon Trigger -->
+        <label for="id_attachment" class="btn btn-outline" style="border: none; font-size: 1.5rem; padding: 0.5rem; border-radius: 50%; cursor: pointer; color: var(--primary-color); display: flex; align-items: center; justify-content: center; height: 45px; width: 45px;" title="Attach File">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+        </label>
+        <!-- The actual input is hidden visually but handles the upload -->
+        <div style="display: none;">
+            {{ form.attachment }}
+        </div>
+        
+        <!-- File Name Preview container (appears when file is selected) -->
+        <div id="file-preview-badge" style="display: none; background: var(--primary-color); color: #fff; padding: 0.4rem 0.8rem; border-radius: 12px; font-weight: bold; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;"></div>
+
+        <!-- Chat Input Field -->
+        <div style="position: relative; flex: 1;">
+            {{ form.text }}
+            <button type="button" id="emoji-btn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 1.5rem; cursor: pointer; z-index: 2; color: var(--secondary-color);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg></button>
+            <div id="emoji-picker-container" style="display: none; position: absolute; bottom: 100%; right: 0; z-index: 1000; margin-bottom: 20px;"></div>
+        </div>
+
+        <button type="submit" class="btn" style="border-radius: 20px; padding: 0.6rem 1.5rem; font-size: 1.1rem;">Send</button>
+    </form>
+</div>
+<style>
+    /* Clean up the textarea for a pill look */
+    #id_text { 
+        border-radius: 25px; 
+        padding-right: 3rem; 
+        padding-left: 1.5rem;
+        resize: none; 
+        overflow: hidden; 
+        height: auto; 
+        min-height: 40px; 
+        max-height: 120px;
+        line-height: 1.4;
+        margin: 0;
+    }
+</style>
+
+<div id="chat-drop-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(29, 209, 161, 0.4); backdrop-filter: blur(15px); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; border: 8px dashed rgba(255, 255, 255, 0.8); box-sizing: border-box; transition: all 0.3s ease;">
+    <div style="font-size: 5rem; margin-bottom: 1rem;"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>
+    <div style="font-size: 2.5rem; text-align: center; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">{% t 'drop_file_send' %}</div>
+</div>
+
+<!-- Load Emoji-Mart -->
+<script src="https://cdn.jsdelivr.net/npm/@emoji-mart/data"></script>
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+
+<script>
+    // Emoji Mart Logic (Apple Emojis specifically requested)
+    const pickerContainer = document.getElementById('emoji-picker-container');
+    const btn = document.getElementById('emoji-btn');
+    const input = document.getElementById('id_text'); 
+    
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    
+    const pickerOptions = {
+        set: 'apple',
+        theme: isDark ? 'dark' : 'light',
+        onEmojiSelect: (emoji) => {
+            const cursor = input.selectionStart;
+            input.value = input.value.substring(0, cursor) + emoji.native + input.value.substring(input.selectionEnd);
+            pickerContainer.style.display = 'none';
+            input.focus();
+        }
+    };
+    
+    const picker = new EmojiMart.Picker(pickerOptions);
+    pickerContainer.appendChild(picker);
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.addEventListener('click', e => {
+        if (!pickerContainer.contains(e.target) && e.target !== btn) {
+            pickerContainer.style.display = 'none';
+        }
+    });
+
+    // Chat Scoped Drag and Drop Logic
+    const overlay = document.getElementById('chat-drop-overlay');
+    let dragDepth = 0;
+
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragDepth++;
+        overlay.style.display = 'flex';
+    });
+
+    document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragDepth--;
+        if (dragDepth === 0) overlay.style.display = 'none';
+    });
+
+    document.addEventListener('dragover', (e) => e.preventDefault());
+
+    // File preview logic
+    const attachInput = document.getElementById('id_attachment');
+    const filePreview = document.getElementById('file-preview-badge');
+    
+    if(attachInput && filePreview) {
+        attachInput.addEventListener('change', function() {
+            if(this.files && this.files.length > 0) {
+                filePreview.style.display = 'block';
+                filePreview.textContent = this.files[0].name;
+            } else {
+                filePreview.style.display = 'none';
+                filePreview.textContent = '';
+            }
+        });
+    }
+
+    // Auto-expand textarea
+    if(input) {
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+
+    // Drag and Drop Update Preview
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDepth = 0;
+        overlay.style.display = 'none';
+        
+        let fileInput = document.querySelector('input[type="file"]:not([disabled])');
+        if (fileInput && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.size / 1024 / 1024 > 200) {
+                alert("This file exceeds the 200MB limit.");
+                return;
+            }
+            fileInput.files = e.dataTransfer.files;
+            
+            // Trigger change event to update preview badge
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+            
+            alert("{% t 'file_attached_alert' %}");
+        }
+    });
+
+    // Scroll to bottom of chat
+    const chatBox = document.querySelector('.card[style*="overflow-y: auto"]');
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}

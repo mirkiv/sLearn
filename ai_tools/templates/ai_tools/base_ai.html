@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load custom_dict %}
+
+{% block title %}AI Tools - SLearn{% endblock %}
+
+{% block content %}
+<style>
+    .ai-nav {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 2rem;
+        align-items: center;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 1rem;
+    }
+    .ai-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--secondary-color);
+        font-weight: 600;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        background: transparent;
+    }
+    .ai-tab:hover {
+        background: var(--glass-bg);
+        color: var(--text-color);
+    }
+    .ai-tab.active {
+        background: var(--card-bg);
+        color: var(--primary-color);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .ai-settings-btn {
+        margin-left: auto;
+        color: var(--secondary-color);
+        padding: 10px;
+        border-radius: 10px;
+        transition: 0.2s;
+    }
+    .ai-settings-btn:hover {
+        background: var(--glass-bg);
+        color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+        .ai-nav {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding-bottom: 1.5rem;
+        }
+        .ai-tab {
+            justify-content: center;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        /* Make the 3rd item span both columns if we have 3 providers */
+        .ai-tab:nth-child(3):last-child {
+            grid-column: span 2;
+            width: 50%;
+            margin: 0 auto;
+        }
+        .ai-settings-btn {
+            grid-column: span 2;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="ai-nav">
+    {% for key, prov in providers.items %}
+    <a href="{% url 'ai_tools:provider_view' key %}" class="ai-tab {% if provider == key %}active{% endif %}">
+        {{ prov.logo|safe }} {{ prov.name }}
+    </a>
+    {% endfor %}
+    
+    {% if ai_settings and ai_settings.api_key %}
+    <a href="{% url 'ai_tools:settings' provider %}" class="ai-settings-btn" title="Настройки">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+
+{% block ai_content %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% load markdown_extras custom_dict %}
+{% with show_save=show_save|default:True %}
+{% with first_image=post.content|get_first_image %}
+<article class="post-card {% if compact %}post-card--compact{% else %}post-card--wide{% endif %}" data-post-id="{{ post.pk }}">
+    
+    {% if first_image %}
+    <div class="pc-image-preview">
+        <img src="{{ first_image }}" alt="{{ post.title }}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display='none'">
+    </div>
+    {% endif %}
+
+    <div class="pc-body">
+        <div class="pc-header">
+            <a href="{% url 'users:user_detail' post.author.username %}" class="pc-avatar-link clickable-avatar" title="{{ post.author.username }}">
+                <div class="pc-avatar">
+                    {% if post.author.avatar %}
+                        <img src="{{ post.author.avatar.url }}" alt="{{ post.author.username }}" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name={{ post.author.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true'">
+                    {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ post.author.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" alt="{{ post.author.username }}" loading="lazy">
+                    {% endif %}
+                </div>
+            </a>
+            <div class="pc-meta">
+                <a href="{% url 'users:user_detail' post.author.username %}" class="pc-username clickable-username" style="font-weight:700; color:var(--text-color);">{{ post.author.first_name|default:post.author.username }}</a>
+                <span class="pc-date" style="font-size:0.75rem; opacity:0.7;">@{{ post.author.username }} • {{ post.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div class="pc-badges">
+                <span class="pc-badge pc-badge--type">{% with t_key="type_"|add:post.post_type %}{% t t_key %}{% endwith %}</span>
+            </div>
+        </div>
+
+        {% if post.title %}
+        <h3 class="pc-title">
+            <a href="{% url 'posts:detail' post.pk %}">{{ post.title }}</a>
+        </h3>
+        {% endif %}
+
+        {% if post.content %}
+        <div class="pc-preview">
+            {{ post.content|strip_images|truncatechars:180 }}
+        </div>
+        {% endif %}
+
+        {% if post.hashtags.all %}
+        <div class="pc-tags">
+            {% for tag in post.hashtags.all %}
+                <span class="pc-tag">#{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="pc-footer">
+            <a href="{% url 'posts:detail' post.pk %}" class="btn pc-view-btn">{% t 'view_full_post' %}</a>
+            {% if show_save and user.is_authenticated %}
+            <button 
+                class="pc-save-btn {% if post in request.user.saved_posts.all %}pc-save-btn--active{% endif %}" 
+                data-url="{% url 'posts:toggle_save' post.pk %}" 
+                data-csrf="{{ csrf_token }}"
+                data-saved="{% if post in request.user.saved_posts.all %}1{% else %}0{% endif %}"
+                title="{% if post in request.user.saved_posts.all %}{% t 'unsave' %}{% else %}{% t 'save_to_favorites' %}{% endif %}"
+                onclick="toggleSave(this)"
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" 
+                     fill="{% if post in request.user.saved_posts.all %}currentColor{% else %}none{% endif %}" 
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endwith %}
+{% endwith %}
