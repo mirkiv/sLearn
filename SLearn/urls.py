@@ -19,7 +19,10 @@ handler404 = 'django.views.defaults.page_not_found'
 handler500 = 'django.views.defaults.server_error'
 
 from django.urls import re_path
+from django.views.static import serve as static_serve
 from chat.views import serve_media
+
 urlpatterns += [
     re_path(r'^media/(?P<path>.*)$', serve_media),
+    re_path(r'^static/(?P<path>.*)$', static_serve, {'document_root': settings.STATICFILES_DIRS[0]}),
 ]
