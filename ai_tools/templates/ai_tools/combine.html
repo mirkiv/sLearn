@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
-{% load custom_dict %}
+{% load static custom_dict %}
 {% block title %}{% t 'combine_notes_title' %} - SLearn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ai.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="card" style="max-width: 800px; margin: 0 auto;">
     <h2 style="color: var(--primary-color); margin-top: 0;">{% t 'ai_note_combination' %}</h2>
@@ -32,9 +36,7 @@
     <h2 style="color: var(--primary-color);">{% t 'gemini_processing' %}</h2>
     <p style="font-size: 1.1rem; color: var(--secondary-color);">{% t 'may_take_seconds' %}</p>
 </div>
-<style>
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
+
 <script>
     document.querySelector('form').addEventListener('submit', function() {
         // Only show if at least two notes are checked

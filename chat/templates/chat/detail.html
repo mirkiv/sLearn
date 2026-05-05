@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
-{% load custom_dict %}
+{% load static custom_dict %}
 {% block title %}{% t 'chat_with_prefix' %} {{ other_user.username }} - SLearn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/messenger.css' %}">
+{% endblock %}
+
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
     <h2 style="margin: 0;">{% t 'chat_with_prefix' %} <span style="color: var(--primary-color);">@{{ other_user.username }}</span></h2>
@@ -53,21 +57,7 @@
         <button type="submit" class="btn" style="border-radius: 20px; padding: 0.6rem 1.5rem; font-size: 1.1rem;">Send</button>
     </form>
 </div>
-<style>
-    /* Clean up the textarea for a pill look */
-    #id_text { 
-        border-radius: 25px; 
-        padding-right: 3rem; 
-        padding-left: 1.5rem;
-        resize: none; 
-        overflow: hidden; 
-        height: auto; 
-        min-height: 40px; 
-        max-height: 120px;
-        line-height: 1.4;
-        margin: 0;
-    }
-</style>
+
 
 <div id="chat-drop-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(29, 209, 161, 0.4); backdrop-filter: blur(15px); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; border: 8px dashed rgba(255, 255, 255, 0.8); box-sizing: border-box; transition: all 0.3s ease;">
     <div style="font-size: 5rem; margin-bottom: 1rem;"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div>

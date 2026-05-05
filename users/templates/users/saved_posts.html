@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load markdown_extras custom_dict %}
 {% block title %}{% t 'favorites_title' %} - SLearn{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
+{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">

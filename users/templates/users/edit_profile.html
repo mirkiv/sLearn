@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
-{% load custom_dict %}
+{% load static custom_dict %}
 
 {% block title %}{% t 'edit_profile_title' %} - {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
+{% endblock %}
 
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
@@ -61,27 +65,5 @@
     </div>
 </div>
 
-<style>
-    .password-field-wrapper input {
-        width: 100%;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--glass-border);
-        background: var(--glass-bg);
-        color: var(--text-color);
-        font-size: 1rem;
-        transition: 0.2s;
-        box-sizing: border-box;
-    }
-    .password-field-wrapper input:focus {
-        border-color: var(--primary-color);
-        outline: none;
-    }
-    .password-field-wrapper ul {
-        margin-top: 5px;
-        padding-left: 20px;
-        color: var(--secondary-color);
-        font-size: 0.85rem;
-    }
-</style>
+
 {% endblock %}

@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
-{% load custom_dict %}
+{% load static custom_dict %}
 
 {% block title %}{% t 'login_title'|default:'Вход' %} - SLearn{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 420px; margin: 4rem auto; position: relative; overflow: hidden;">

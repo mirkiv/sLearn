@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load markdown_extras custom_dict %}
 {% block title %}{{ post.title|default:"Post" }} - SLearn{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/posts.css' %}">
+{% endblock %}
 
 {% block content %}
 <!-- KaTeX for LaTeX rendering -->
@@ -9,58 +14,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
     onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});"></script>
 
-<style>
-    .post-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 20px;
-    }
 
-    @media (max-width: 600px) {
-        .post-header {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 15px;
-        }
-        
-        .post-header > div {
-            width: 100%;
-        }
-
-        .post-header form {
-            margin-left: 0 !important;
-            width: 100%;
-        }
-
-        .post-header form button {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .post-header .btn {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .card {
-            padding: 1rem !important;
-            border-radius: 0 !important;
-            margin-left: -1rem !important;
-            margin-right: -1rem !important;
-            border-left: none !important;
-            border-right: none !important;
-        }
-        
-        .markdown-body {
-            padding: 1rem !important;
-        }
-        
-        h1 {
-            font-size: 1.5rem !important;
-        }
-    }
-</style>
 
 <div style="max-width: 800px; margin: 0 auto; padding: 0 1rem;">
     <div class="card" style="margin-bottom: 2rem;">

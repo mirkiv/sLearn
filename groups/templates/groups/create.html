@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
-{% load custom_dict %}
+{% load static custom_dict %}
 {% block title %}{% t 'create_group_title' %} - SLearn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/groups.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="card" style="max-width: 640px; margin: 0 auto;">
     <h2 style="margin-bottom: 1.5rem; margin-top: 0;">{% t 'create_study_group_header' %}</h2>
@@ -58,31 +62,7 @@
             <a href="{% url 'groups:list' %}" class="btn btn-outline" style="flex:1;text-align:center;">{% t 'cancel' %}</a>
         </div>
         
-        <style>
-            .group-settings-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1.5rem;
-                margin-top: 1.5rem;
-            }
-            .form-actions {
-                margin-top: 1.5rem;
-                display: flex;
-                gap: 1rem;
-            }
-            @media (max-width: 600px) {
-                .group-settings-grid {
-                    grid-template-columns: 1fr;
-                    gap: 1rem;
-                }
-                .form-actions {
-                    flex-direction: column;
-                }
-                .form-actions .btn {
-                    width: 100%;
-                }
-            }
-        </style>
+        
     </form>
 </div>
 {% endblock %}
