@@ -1,227 +1,207 @@
 {% extends 'base.html' %}
 {% load static custom_dict %}
 
-{% block title %}{{ profile_user.username }} - {% t 'profile' %}{% endblock %}
-
-{% block container_style %}max-width: 1100px; padding-top: 1rem;{% endblock %}
+{% block title %}{{ profile_user.username }} — SLearn{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/users.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="prof-wrap">
 
-
-<div class="profile-container">
-    <!-- Header Card -->
-    <div class="profile-header">
-        <div class="profile-cover"></div>
-        <div class="profile-info-wrapper">
+    <!-- ── Hero ── -->
+    <div class="prof-hero">
+        <div class="prof-avatar-ring">
             {% if profile_user.avatar %}
-            <img src="{{ profile_user.avatar.url }}" alt="Avatar" class="profile-avatar-large" onerror="this.src='https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true'">
+            <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }}" class="prof-avatar"
+                 onerror="this.src='https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true'">
             {% else %}
-            <img src="https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" alt="Avatar" class="profile-avatar-large">
-            {% endif %}
-
-            <div class="profile-main-meta">
-                <h1 class="profile-name">
-                    {{ profile_user.first_name|default:profile_user.username }}
-                    {% if profile_user.is_staff %}<span title="{% t 'staff' %}" style="font-size: 1.2rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; color: var(--primary-color);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>{% endif %}
-                </h1>
-                <div class="profile-username">@{{ profile_user.username }}</div>
-
-                <div class="profile-actions">
-                    {% if request.user == profile_user %}
-                    <a href="{% url 'users:edit_profile' %}" class="btn">
-                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span> {% t 'edit_profile' %}
-                    </a>
-                    {% else %}
-                    <a href="{% url 'users:toggle_follow' profile_user.username %}"
-                        class="btn {% if is_following %}btn-outline{% endif %}">
-                        {% if is_following %}
-                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span> {% t 'unfollow_btn' %}
-                        {% else %}
-                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span> {% t 'follow_btn' %}
-                        {% endif %}
-                    </a>
-                    <a href="{% url 'chat:detail' profile_user.username %}" class="btn btn-outline">
-                        <span style="margin-right: 5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></span> {% t 'send_message' %}
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-stats-row">
-            <div class="stat-item">
-                <span class="stat-value">{{ user_posts.count }}</span>
-                <span class="stat-label">{% t 'posts_count' %}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value">{{ followers.count }}</span>
-                <span class="stat-label">{% t 'followers' %}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value">{{ following.count }}</span>
-                <span class="stat-label">{% t 'following' %}</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="profile-content-grid">
-        <!-- Sidebar Info -->
-        <div class="profile-sidebar">
-            <div class="sidebar-card">
-                <div class="card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> {% t 'about' %}</div>
-                <div class="info-list">
-                    <div class="info-item">
-                        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-                        <div>
-                            <div style="font-size: 0.75rem; opacity: 0.7;">{% t 'joined_on' %}</div>
-                            <div style="font-weight: 600;">{{ profile_user.date_joined|date:"d M Y" }}</div>
-                        </div>
-                    </div>
-                    {% if profile_user.email and request.user == profile_user %}
-                    <div class="info-item">
-                        <div class="info-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
-                        <div>
-                            <div style="font-size: 0.75rem; opacity: 0.7;">{% t 'email' %}</div>
-                            <div style="font-weight: 600;">{{ profile_user.email }}</div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if user_groups %}
-            <div class="sidebar-card">
-                <div class="card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {% t 'groups_member' %}</div>
-                {% for membership in user_groups|slice:":5" %}
-                <a href="{% url 'groups:detail' membership.group.pk %}" class="user-list-item">
-                    <div
-                        style="width: 36px; height: 36px; border-radius: 8px; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; overflow: hidden;">
-                        <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;">
-                    </div>
-                    <span style="font-weight: 600; font-size: 0.9rem;">{{ membership.group.name }}</span>
-                </a>
-                {% endfor %}
-            </div>
+            <img src="https://ui-avatars.com/api/?name={{ profile_user.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true"
+                 alt="{{ profile_user.username }}" class="prof-avatar">
             {% endif %}
         </div>
 
-        <!-- Tabs Content -->
-        <div class="profile-tabs-wrapper">
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="openTab(event, 'postsTab')">{% t 'my_posts' %}</button>
-                <button class="tab-btn" onclick="openTab(event, 'groupsTab')">{% t 'groups' %}</button>
-                <button class="tab-btn" onclick="openTab(event, 'followersTab')">{% t 'followers' %}</button>
-                <button class="tab-btn" onclick="openTab(event, 'followingTab')">{% t 'following' %}</button>
-            </div>
+        <div class="prof-identity">
+            <h1 class="prof-name">
+                {{ profile_user.first_name|default:profile_user.username }}
+                {% if profile_user.is_staff %}
+                <span class="prof-badge" title="{% t 'staff' %}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                {% endif %}
+            </h1>
+            <div class="prof-handle">@{{ profile_user.username }}</div>
 
-            <!-- Posts Tab -->
-            <div id="postsTab" class="tab-pane active">
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    {% if user_posts %}
-                        {% for post in user_posts %}
-                            {% include 'includes/post_card.html' with post=post compact=False show_save=False %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="notif-empty">{% t 'no_posts_user' %}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Groups Tab -->
-            <div id="groupsTab" class="tab-pane">
-                {% if user_groups %}
-                {% for membership in user_groups %}
-                <a href="{% url 'groups:detail' membership.group.pk %}" class="group-list-item">
-                    <div class="group-icon-box" style="padding:0; overflow:hidden;">
-                        <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" style="width:100%;height:100%;object-fit:cover;">
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 700; font-size: 1.1rem;">{{ membership.group.name }}</div>
-                        <div style="font-size: 0.85rem; color: var(--secondary-color);">
-                            {{ membership.get_role_display }} • {% t 'members_count' count=membership.group.memberships.count %}
-                        </div>
-                    </div>
-                    <div style="font-size: 1.2rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>
-                </a>
-                {% endfor %}
-                {% else %}
-                <div class="notif-empty">{% t 'no_groups_user' %}</div>
+            <div class="prof-meta">
+                <span class="prof-meta-chip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ profile_user.date_joined|date:"d M Y" }}
+                </span>
+                {% if profile_user.email and request.user == profile_user %}
+                <span class="prof-meta-chip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    {{ profile_user.email }}
+                </span>
                 {% endif %}
             </div>
 
-            <!-- Followers Tab -->
-            <div id="followersTab" class="tab-pane">
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                    {% for f in followers %}
-                    <a href="{% url 'users:user_detail' f.username %}" class="user-list-item"
-                        style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);">
-                        <div class="clickable-avatar">
-                            {% if f.avatar %}
-                            <img src="{{ f.avatar.url }}" class="user-list-avatar">
-                            {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="user-list-avatar">
-                            {% endif %}
-                        </div>
-                        <div style="min-width: 0;">
-                            <div class="clickable-username"
-                                style="font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis;">
-                                {{ f.username }}</div>
-                            <div style="font-size: 0.75rem; color: var(--secondary-color);">@{{ f.username }}</div>
-                        </div>
-                    </a>
-                    {% empty %}
-                    <div class="notif-empty" style="grid-column: 1/-1;">{% t 'no_followers' %}</div>
-                    {% endfor %}
+            <div class="prof-stats">
+                <div class="prof-stat">
+                    <span class="prof-stat-value">{{ user_posts.count }}</span>
+                    <span class="prof-stat-label">{% t 'posts_count' %}</span>
                 </div>
-            </div>
-
-            <!-- Following Tab -->
-            <div id="followingTab" class="tab-pane">
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                    {% for f in following %}
-                    <a href="{% url 'users:user_detail' f.username %}" class="user-list-item"
-                        style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);">
-                        <div class="clickable-avatar">
-                            {% if f.avatar %}
-                            <img src="{{ f.avatar.url }}" class="user-list-avatar">
-                            {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="user-list-avatar">
-                            {% endif %}
-                        </div>
-                        <div style="min-width: 0;">
-                            <div class="clickable-username"
-                                style="font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis;">
-                                {{ f.username }}</div>
-                            <div style="font-size: 0.75rem; color: var(--secondary-color);">@{{ f.username }}</div>
-                        </div>
-                    </a>
-                    {% empty %}
-                    <div class="notif-empty" style="grid-column: 1/-1;">{% t 'no_following' %}</div>
-                    {% endfor %}
+                <span class="prof-stat-divider"></span>
+                <div class="prof-stat">
+                    <span class="prof-stat-value">{{ followers.count }}</span>
+                    <span class="prof-stat-label">{% t 'followers' %}</span>
+                </div>
+                <span class="prof-stat-divider"></span>
+                <div class="prof-stat">
+                    <span class="prof-stat-value">{{ following.count }}</span>
+                    <span class="prof-stat-label">{% t 'following' %}</span>
                 </div>
             </div>
         </div>
+
+        <div class="prof-actions">
+            {% if request.user == profile_user %}
+            <a href="{% url 'users:edit_profile' %}" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                {% t 'edit_profile' %}
+            </a>
+            {% else %}
+            <a href="{% url 'users:toggle_follow' profile_user.username %}"
+               class="btn {% if is_following %}btn-outline{% endif %}">
+                {% if is_following %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% t 'unfollow_btn' %}
+                {% else %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                {% t 'follow_btn' %}
+                {% endif %}
+            </a>
+            <a href="{% url 'chat:detail' profile_user.username %}" class="btn btn-outline">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                {% t 'send_message' %}
+            </a>
+            {% endif %}
+        </div>
     </div>
-</div>
+
+    <!-- ── Groups strip (if member of any) ── -->
+    {% if user_groups %}
+    <div class="prof-groups-strip">
+        <span class="prof-groups-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {% t 'groups_member' %}
+        </span>
+        {% for membership in user_groups|slice:":8" %}
+        <a href="{% url 'groups:detail' membership.group.pk %}" class="prof-group-chip" title="{{ membership.group.name }}">
+            <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true"
+                 class="prof-group-chip-img" alt="{{ membership.group.name }}">
+            <span>{{ membership.group.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ── Tabs ── -->
+    <div class="prof-tabs-bar">
+        <button class="prof-tab active" onclick="openTab(event,'postsTab')">{% t 'my_posts' %}</button>
+        <button class="prof-tab" onclick="openTab(event,'groupsTab')">{% t 'groups' %}</button>
+        <button class="prof-tab" onclick="openTab(event,'followersTab')">{% t 'followers' %} <span class="prof-tab-count">{{ followers.count }}</span></button>
+        <button class="prof-tab" onclick="openTab(event,'followingTab')">{% t 'following' %} <span class="prof-tab-count">{{ following.count }}</span></button>
+    </div>
+
+    <!-- ── Tab Content ── -->
+    <div class="prof-tab-content">
+
+        <!-- Posts -->
+        <div id="postsTab" class="prof-pane active">
+            <div class="prof-posts-list">
+                {% if user_posts %}
+                    {% for post in user_posts %}
+                        {% include 'includes/post_card.html' with post=post compact=False show_save=False %}
+                    {% endfor %}
+                {% else %}
+                    <div class="prof-empty">{% t 'no_posts_user' %}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Groups -->
+        <div id="groupsTab" class="prof-pane">
+            {% if user_groups %}
+            <div class="prof-group-list">
+                {% for membership in user_groups %}
+                <a href="{% url 'groups:detail' membership.group.pk %}" class="group-list-item">
+                    <div class="group-icon-box" style="padding:0;overflow:hidden;">
+                        <img src="https://ui-avatars.com/api/?name={{ membership.group.name|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true"
+                             style="width:100%;height:100%;object-fit:cover;" alt="">
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight:700;font-size:1rem;">{{ membership.group.name }}</div>
+                        <div style="font-size:0.82rem;color:var(--secondary-color);">
+                            {{ membership.get_role_display }} · {% t 'members_count' count=membership.group.memberships.count %}
+                        </div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="prof-empty">{% t 'no_groups_user' %}</div>
+            {% endif %}
+        </div>
+
+        <!-- Followers -->
+        <div id="followersTab" class="prof-pane">
+            <div class="prof-people-grid">
+                {% for f in followers %}
+                <a href="{% url 'users:user_detail' f.username %}" class="prof-person-card">
+                    {% if f.avatar %}
+                    <img src="{{ f.avatar.url }}" class="prof-person-avatar" alt="{{ f.username }}">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="prof-person-avatar" alt="{{ f.username }}">
+                    {% endif %}
+                    <div class="prof-person-name">{{ f.first_name|default:f.username }}</div>
+                    <div class="prof-person-handle">@{{ f.username }}</div>
+                </a>
+                {% empty %}
+                <div class="prof-empty" style="grid-column:1/-1;">{% t 'no_followers' %}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Following -->
+        <div id="followingTab" class="prof-pane">
+            <div class="prof-people-grid">
+                {% for f in following %}
+                <a href="{% url 'users:user_detail' f.username %}" class="prof-person-card">
+                    {% if f.avatar %}
+                    <img src="{{ f.avatar.url }}" class="prof-person-avatar" alt="{{ f.username }}">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ f.username|urlencode }}&background=1dd1a1&color=fff&length=1&bold=true&rounded=true" class="prof-person-avatar" alt="{{ f.username }}">
+                    {% endif %}
+                    <div class="prof-person-name">{{ f.first_name|default:f.username }}</div>
+                    <div class="prof-person-handle">@{{ f.username }}</div>
+                </a>
+                {% empty %}
+                <div class="prof-empty" style="grid-column:1/-1;">{% t 'no_following' %}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div><!-- /prof-tab-content -->
+</div><!-- /prof-wrap -->
 
 <script>
     function openTab(evt, tabName) {
-        var i, tabpane, tablinks;
-        tabpane = document.getElementsByClassName("tab-pane");
-        for (i = 0; i < tabpane.length; i++) {
-            tabpane[i].classList.remove("active");
-        }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active");
-        }
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
+        document.querySelectorAll('.prof-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.prof-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        evt.currentTarget.classList.add('active');
     }
 </script>
 {% endblock %}
