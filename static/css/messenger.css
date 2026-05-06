@@ -71,6 +71,7 @@
         padding: 0 !important;
         width: 100% !important;
         height: calc(100vh - 75px);
+        height: calc(100dvh - 75px);
     }
 
     .messenger-container {
@@ -295,12 +296,14 @@
 
     .chat-input-area {
         padding: 15px 20px;
+        padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
         border-top: 1px solid var(--m-border);
         background: var(--m-input-area-bg);
         display: flex;
         flex-direction: column;
         gap: 8px;
         position: relative;
+        z-index: 10;
     }
 
     .chat-form {
@@ -963,10 +966,11 @@
         }
         .chat-area {
             width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
             height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
         }
         .chat-area.empty {
             display: none;
