@@ -338,31 +338,31 @@ def api_notifications(request):
         # If it's a new-style notification with actor and type, we render it dynamically
         if n.actor and n.notif_type:
             if n.notif_type == 'join_request':
-                title = t_py('notif_join_request_title', lang).format(username=actor_name, group_name=extra.get('group_name', ''))
-                message = t_py('notif_join_request_msg', lang).format(username=actor_name)
+                title = t_py('notif_join_request_title', lang, username=actor_name, group_name=extra.get('group_name', ''))
+                message = t_py('notif_join_request_msg', lang, username=actor_name)
             elif n.notif_type == 'join_accepted':
-                title = t_py('notif_join_accepted_title', lang).format(group_name=extra.get('group_name', ''))
-                message = t_py('notif_join_accepted_msg', lang).format(group_name=extra.get('group_name', ''))
+                title = t_py('notif_join_accepted_title', lang, group_name=extra.get('group_name', ''))
+                message = t_py('notif_join_accepted_msg', lang, group_name=extra.get('group_name', ''))
             elif n.notif_type == 'join_rejected':
-                title = t_py('notif_join_rejected_title', lang).format(group_name=extra.get('group_name', ''))
-                message = t_py('notif_join_rejected_msg', lang).format(group_name=extra.get('group_name', ''))
+                title = t_py('notif_join_rejected_title', lang, group_name=extra.get('group_name', ''))
+                message = t_py('notif_join_rejected_msg', lang, group_name=extra.get('group_name', ''))
             elif n.notif_type == 'post_approved':
                 if 'group_name' in extra: # Review request
-                    title = t_py('notif_post_review_title', lang).format(post_title=extra.get('post_title', ''))
-                    message = t_py('notif_post_review_msg', lang).format(username=actor_name, post_title=extra.get('post_title', ''), group_name=extra.get('group_name', ''))
+                    title = t_py('notif_post_review_title', lang, post_title=extra.get('post_title', ''))
+                    message = t_py('notif_post_review_msg', lang, username=actor_name, post_title=extra.get('post_title', ''), group_name=extra.get('group_name', ''))
                 else: # Real approval
-                    title = t_py('notif_post_approved_title', lang).format(post_title=extra.get('post_title', ''))
-                    message = t_py('notif_post_approved_msg', lang).format(post_title=extra.get('post_title', ''))
+                    title = t_py('notif_post_approved_title', lang, post_title=extra.get('post_title', ''))
+                    message = t_py('notif_post_approved_msg', lang, post_title=extra.get('post_title', ''), group_name=extra.get('group_name', ''))
                     if extra.get('comment'):
                         message += f" ({extra['comment']})"
             elif n.notif_type == 'post_rejected':
-                title = t_py('notif_post_rejected_title', lang).format(post_title=extra.get('post_title', ''))
-                message = t_py('notif_post_rejected_msg', lang).format(post_title=extra.get('post_title', ''), group_name=extra.get('group_name', ''))
+                title = t_py('notif_post_rejected_title', lang, post_title=extra.get('post_title', ''))
+                message = t_py('notif_post_rejected_msg', lang, post_title=extra.get('post_title', ''), group_name=extra.get('group_name', ''))
                 if extra.get('comment'):
                     message += f" ({extra['comment']})"
             elif n.notif_type == 'new_follower':
-                title = t_py('notif_follower_title', lang).format(username=actor_name)
-                message = t_py('notif_follower_msg', lang).format(username=actor_name)
+                title = t_py('notif_follower_title', lang, username=actor_name)
+                message = t_py('notif_follower_msg', lang, username=actor_name)
         # If actor is missing but type is present (shouldn't happen for new ones), 
         # or it's an old-style notification, we keep the fallbacks (n.title/n.message)
         elif n.notif_type == 'post_approved':
